@@ -30,8 +30,10 @@ class DoubleSlidingDoor(Door):
 
         if not self.plugin == 'none':
             plugin_ele = SubElement(self.model_ele, 'plugin')
-            plugin_ele.set('name', 'door')
-            plugin_ele.set('filename', 'libdoor.so')
+            plugin_ele.set('name', 'register_component')
+            plugin_ele.set('filename', 'libregister_component.so')
+            component_ele = SubElement(plugin_ele, 'component')
+            component_ele.set('name', 'Door')
             plugin_params = {
                 'v_max_door': '0.2',
                 'a_max_door': '0.2',
@@ -40,7 +42,7 @@ class DoubleSlidingDoor(Door):
                 'f_max_door': '100.0'
             }
             for param_name, param_value in plugin_params.items():
-                ele = SubElement(plugin_ele, param_name)
+                ele = SubElement(component_ele, param_name)
                 ele.text = param_value
 
             door_ele = SubElement(plugin_ele, 'door')
