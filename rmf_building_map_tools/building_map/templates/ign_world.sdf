@@ -17,6 +17,10 @@
       filename="libignition-gazebo-scene-broadcaster-system.so"
       name="ignition::gazebo::systems::SceneBroadcaster">
     </plugin>
+    <plugin
+      filename="libdoor.so"
+      name="door">
+    </plugin>
 
     <scene>
       <ambient>1 1 1</ambient>

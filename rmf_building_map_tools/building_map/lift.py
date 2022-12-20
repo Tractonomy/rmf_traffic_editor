@@ -137,12 +137,14 @@ class LiftDoor:
 
     def generate_door_plugin(self, model_ele, name):
         plugin_ele = SubElement(model_ele, 'plugin')
-        plugin_ele.set('name', 'door')
-        plugin_ele.set('filename', 'libdoor.so')
+        plugin_ele.set('name', 'register_component')
+        plugin_ele.set('filename', 'libregister_component.so')
+        component_ele = SubElement(plugin_ele, 'component')
+        component_ele.set('name', 'Door')
         for param_name, param_value in self.params.items():
-            ele = SubElement(plugin_ele, param_name)
+            ele = SubElement(component_ele, param_name)
             ele.text = f'{param_value}'
-        door_ele = SubElement(plugin_ele, 'door')
+        door_ele = SubElement(component_ele, 'door')
         door_ele.set('left_joint_name', 'left_joint')
         door_ele.set('name', f'{name}')
         door_ele.set('right_joint_name', 'right_joint')
@@ -198,12 +200,14 @@ class LiftDoor:
 
         if self.plugin:
             plugin_ele = SubElement(lift_model_ele, 'plugin')
-            plugin_ele.set('name', 'door')
-            plugin_ele.set('filename', 'libdoor.so')
+            plugin_ele.set('name', 'register_component')
+            plugin_ele.set('filename', 'libregister_component.so')
+            component_ele = SubElement(plugin_ele, 'component')
+            component_ele.set('name', 'Door')
             for param_name, param_value in self.params.items():
-                ele = SubElement(plugin_ele, param_name)
+                ele = SubElement(component_ele, param_name)
                 ele.text = f'{param_value}'
-            door_ele = SubElement(plugin_ele, 'door')
+            door_ele = SubElement(component_ele, 'door')
             door_ele.set('left_joint_name', f'{name}_left_joint')
             door_ele.set('name', f'{name}')
             door_ele.set('right_joint_name', f'{name}_right_joint')
