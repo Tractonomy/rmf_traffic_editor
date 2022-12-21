@@ -150,70 +150,6 @@ class LiftDoor:
         door_ele.set('right_joint_name', 'right_joint')
         door_ele.set('type', 'DoubleSlidingDoor')
 
-    # TODO: remove this function once nesting model is supported in ignition.
-    def generate_cabin_door_ign(self, lift_model_ele, name):
-        # This is for cabin door generation for ignition gazebo as it doesn't
-        # support nested models yet. Once ignition gazebo supports nested
-        # models, this should be removed.
-        (x, y) = self.cabin_door_pose
-        yaw = self.motion_axis_orientation
-        right_x = x + np.cos(yaw) * self.width/4
-        left_x = x - np.cos(yaw) * self.width/4
-        right_y = y + np.sin(yaw) * self.width/4
-        left_y = y - np.sin(yaw) * self.width/4
-
-        door_size = [self.width / 2, self.thickness, self.height]
-        right_door_pose = Element('pose')
-        right_door_pose.text = \
-            f'{right_x} {right_y} {self.height / 2} 0 0 {yaw}'
-
-        lift_model_ele.append(box_link(f'{name}_right_door',
-                                       door_size,
-                                       right_door_pose,
-                                       material=lift_material(),
-                                       bitmask='0x02'))
-
-        lift_model_ele.append(joint(f'{name}_right_joint',
-                                    'prismatic',
-                                    'platform',
-                                    f'{name}_right_door',
-                                    joint_axis='x',
-                                    lower_limit=0,
-                                    upper_limit=self.width / 2))
-
-        left_door_pose = Element('pose')
-        left_door_pose.text = f'{left_x} {left_y} {self.height / 2} 0 0 {yaw}'
-
-        lift_model_ele.append(box_link(f'{name}_left_door',
-                                       door_size,
-                                       left_door_pose,
-                                       material=lift_material(),
-                                       bitmask='0x02'))
-
-        lift_model_ele.append(joint(f'{name}_left_joint',
-                                    'prismatic',
-                                    'platform',
-                                    f'{name}_left_door',
-                                    joint_axis='x',
-                                    lower_limit=-self.width / 2,
-                                    upper_limit=0))
-
-        if self.plugin:
-            plugin_ele = SubElement(lift_model_ele, 'plugin')
-            plugin_ele.set('name', 'register_component')
-            plugin_ele.set('filename', 'libregister_component.so')
-            component_ele = SubElement(plugin_ele, 'component')
-            component_ele.set('name', 'Door')
-            for param_name, param_value in self.params.items():
-                ele = SubElement(component_ele, param_name)
-                ele.text = f'{param_value}'
-            door_ele = SubElement(component_ele, 'door')
-            door_ele.set('left_joint_name', f'{name}_left_joint')
-            door_ele.set('name', f'{name}')
-            door_ele.set('right_joint_name', f'{name}_right_joint')
-            door_ele.set('type', 'DoubleSlidingDoor')
-
-
 class Lift:
     def __init__(self, yaml_node, name, transform, levels, coordinate_system):
         self.name = name
@@ -382,7 +318,7 @@ class Lift:
         platform.append(visual(f'{name}_visual', pose, dims, lift_material()))
         platform.append(collision(f'{name}_collision', pose, dims, '0x01'))
 
-    def generate_cabin(self, world_ele, options):
+    def generate_cabin(self, world_ele):
         # materials missing for now
         lift_model_name = f'{self.name}'
         lift_model_ele = SubElement(world_ele, 'model')
@@ -433,16 +369,9 @@ class Lift:
                                     joint_axis='z'))
 
         # cabin doors
-        # TODO: remove the if statement here once nesting model is supported
-        # in ignition.
-        if 'ignition' in options:
-            for lift_door in self.doors:
-                lift_door.generate_cabin_door_ign(
-                    lift_model_ele, f'CabinDoor_{self.name}_{lift_door.name}')
-        else:
-            for lift_door in self.doors:
-                lift_door.generate_cabin_door(
-                    lift_model_ele, f'CabinDoor_{self.name}_{lift_door.name}')
+        for lift_door in self.doors:
+            lift_door.generate_cabin_door(
+                lift_model_ele, f'CabinDoor_{self.name}_{lift_door.name}')
 
         # lift cabin plugin
         if self.plugins:
