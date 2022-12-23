@@ -418,7 +418,7 @@ class Building:
                 print(f'[{lift_name}] is not serving any floor, ignoring.')
                 continue
             lift.generate_shaft_doors(world)
-            lift.generate_cabin(world)
+            lift.generate_cabin(world, options)
 
         charger_waypoints_ele = SubElement(
           world,
