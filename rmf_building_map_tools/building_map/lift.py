@@ -447,14 +447,16 @@ class Lift:
         # lift cabin plugin
         if self.plugins:
             plugin_ele = SubElement(lift_model_ele, 'plugin')
-            plugin_ele.set('name', 'lift')
-            plugin_ele.set('filename', 'liblift.so')
+            plugin_ele.set('name', 'register_component')
+            plugin_ele.set('filename', 'libregister_component.so')
+            component_ele = SubElement(plugin_ele, 'component')
+            component_ele.set('name', 'Lift')
 
-            lift_name_ele = SubElement(plugin_ele, 'lift_name')
+            lift_name_ele = SubElement(component_ele, 'lift_name')
             lift_name_ele.text = f'{self.name}'
 
             for level_name, door_names in self.level_doors.items():
-                floor_ele = SubElement(plugin_ele, 'floor')
+                floor_ele = SubElement(component_ele, 'floor')
                 floor_ele.set('name', f'{level_name}')
                 floor_ele.set(
                     'elevation', f'{self.level_elevation[level_name]}')
@@ -468,13 +470,13 @@ class Lift:
                             'shaft_door',
                             f'ShaftDoor_{self.name}_{level_name}_{door.name}')
 
-            initial_floor_ele = SubElement(plugin_ele, 'initial_floor')
+            initial_floor_ele = SubElement(component_ele, 'initial_floor')
             initial_floor_ele.text = f'{self.initial_floor_name}'
             for param_name, param_value in self.params.items():
-                ele = SubElement(plugin_ele, param_name)
+                ele = SubElement(component_ele, param_name)
                 ele.text = f'{param_value}'
 
-            cabin_joint_ele = SubElement(plugin_ele, 'cabin_joint_name')
+            cabin_joint_ele = SubElement(component_ele, 'cabin_joint_name')
             cabin_joint_ele.text = 'cabin_joint'
         else:
             static_lift_ele = SubElement(lift_model_ele, 'static')

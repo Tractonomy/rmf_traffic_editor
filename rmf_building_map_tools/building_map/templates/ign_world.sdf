@@ -21,6 +21,10 @@
       filename="libdoor.so"
       name="door">
     </plugin>
+    <plugin
+      filename="liblift.so"
+      name="lift">
+    </plugin>
 
     <scene>
       <ambient>1 1 1</ambient>
