@@ -65,6 +65,8 @@ public:
   bool is_holding_point() const;
   bool is_cleaning_zone() const;
   bool is_charger() const;
+  bool is_lattice_root() const;
+  double theta() const;
 
   std::string dropoff_ingestor() const;
   std::string pickup_dispenser() const;

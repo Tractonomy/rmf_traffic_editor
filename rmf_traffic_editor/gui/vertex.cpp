@@ -39,6 +39,8 @@ const vector<pair<string, Param::Type>> Vertex::allowed_params
   { "is_holding_point", Param::Type::BOOL },
   { "is_passthrough_point", Param::Type::BOOL },
   { "human_goal_set_name", Param::Type::STRING },
+  { "is_lattice_root", Param::Type::BOOL },
+  { "theta", Param::Type::DOUBLE }, // parameter with the yaw angle of the point
 };
 
 
@@ -276,6 +278,36 @@ void Vertex::draw(
     pixmap_item->setToolTip(("Vertex is " + icon_name).c_str());
   }
 
+  if (is_lattice_root()) {
+     const double icon_bearing = 90.0 * M_PI / 180.0;
+    QIcon icon(":icons/e_point.svg");
+    QPixmap pixmap(icon.pixmap(icon.actualSize(QSize(128, 128))));
+    QGraphicsPixmapItem* pixmap_item = scene->addPixmap(pixmap);
+    pixmap_item->setOffset(
+      -pixmap.width() / 2,
+      -pixmap.height() / 2);
+    pixmap_item->setScale(icon_scale);
+    pixmap_item->setZValue(20.0);
+    pixmap_item->setPos(
+      x + 1.1 * icon_ring_radius * cos(icon_bearing),
+      y - 1.1 * icon_ring_radius * sin(icon_bearing));
+    if (!coordinate_system.is_y_flipped())
+      pixmap_item->setTransform(pixmap_item->transform().scale(1, -1));
+    pixmap_item->setToolTip("This vertex is an entry/exit point of a lattice region");
+  }
+
+  if(! std::isnan(theta())) {
+    QGraphicsLineItem * line_item = scene->addLine(
+      x,
+      y,
+      x + radius * cos(theta()),
+      y + radius * sin(theta()),
+      vertex_pen
+    );
+
+    line_item->setZValue(20.0);
+  }
+
   if (!name.empty())
   {
     QGraphicsSimpleTextItem* text_item = scene->addSimpleText(
@@ -381,3 +413,22 @@ std::string Vertex::lift_cabin() const
 
   return it->second.value_string;
 }
+
+bool Vertex::is_lattice_root() const
+{
+  const auto it = params.find("is_lattice_root");
+  if (it == params.end())
+    return false;
+
+  return it->second.value_bool;
+}
+
+double Vertex::theta() const
+{
+  const auto it = params.find("theta");
+  if (it == params.end())
+    return NAN;
+
+  return it->second.value_double;
+}
+
