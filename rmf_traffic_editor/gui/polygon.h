@@ -42,7 +42,8 @@ public:
     FLOOR,
     ZONE,
     ROI,
-    HOLE
+    HOLE,
+    LATTICE_REGION
   } type = UNDEFINED;
 
   Polygon();

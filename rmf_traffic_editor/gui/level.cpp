@@ -279,6 +279,9 @@ YAML::Node Level::to_yaml(const CoordinateSystem& coordinate_system) const
       case Polygon::HOLE:
         y["holes"].push_back(polygon.to_yaml());
         break;
+      case Polygon::LATTICE_REGION:
+        y["lattice_region"].push_back(polygon.to_yaml());
+        break;
       default:
         printf("tried to save an unknown polygon type: %d\n",
           static_cast<int>(polygon.type));
@@ -1040,6 +1043,7 @@ void Level::draw_polygons(QGraphicsScene* scene) const
 {
   const QBrush floor_brush(QColor::fromRgbF(0.9, 0.9, 0.9, 0.8));
   const QBrush hole_brush(QColor::fromRgbF(0.3, 0.3, 0.3, 0.5));
+  const QBrush lattice_region_brush(QColor::fromRgbF(0.47, 0.9, 0.9, 0.5));
 
   // first draw the floor polygons
   for (const auto& polygon : polygons)
@@ -1053,6 +1057,13 @@ void Level::draw_polygons(QGraphicsScene* scene) const
   {
     if (polygon.type == Polygon::HOLE)
       draw_polygon(scene, hole_brush, polygon);
+  }
+
+  // now draw the lattice regions
+  for (const auto& polygon : polygons)
+  {
+    if (polygon.type == Polygon::LATTICE_REGION)
+      draw_polygon(scene, lattice_region_brush, polygon);
   }
 
 #if 0

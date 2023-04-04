@@ -400,6 +400,7 @@ Editor::Editor()
   create_tool_button(TOOL_ADD_FLOOR, ":icons/floor.svg",
     "Add floor polygon (F)");
   create_tool_button(TOOL_ADD_HOLE, ":icons/hole.svg", "Add hole polygon");
+  create_tool_button(TOOL_ADD_LATTICE_REGION, ":icons/lattice_region.svg", "Add lattice region to explore");
   create_tool_button(TOOL_ADD_ROI, ":icons/roi.svg", "Add region of interest");
   create_tool_button(TOOL_EDIT_POLYGON, "", "Edit Polygon (E)");
   create_tool_button(TOOL_ADD_HUMAN_LANE, "", "Add Human Lane with width");
@@ -926,6 +927,7 @@ void Editor::mouse_event(const MouseType t, QMouseEvent* e)
     case TOOL_ROTATE:       mouse_rotate(t, e, p); break;
     case TOOL_ADD_FLOOR:    mouse_add_floor(t, e, p); break;
     case TOOL_ADD_HOLE:     mouse_add_hole(t, e, p); break;
+    case TOOL_ADD_LATTICE_REGION:     mouse_add_lattice_region(t, e, p); break;
     case TOOL_EDIT_POLYGON: mouse_edit_polygon(t, e, p); break;
     case TOOL_ADD_FEATURE:  mouse_add_feature(t, e, p); break;
     case TOOL_ADD_CONSTRAINT: mouse_add_constraint(t, e, p); break;
@@ -2522,6 +2524,12 @@ void Editor::mouse_add_roi(
 {
   mouse_add_polygon(t, e, p, Polygon::ROI);
 }
+void Editor::mouse_add_lattice_region(
+  const MouseType t, QMouseEvent* e, const QPointF& p)
+{
+  mouse_add_polygon(t, e, p, Polygon::LATTICE_REGION);
+}
+
 
 void Editor::mouse_edit_polygon(
   const MouseType t, QMouseEvent* e, const QPointF& p)
