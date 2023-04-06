@@ -402,6 +402,7 @@ Editor::Editor()
   create_tool_button(TOOL_ADD_HOLE, ":icons/hole.svg", "Add hole polygon");
   create_tool_button(TOOL_ADD_LATTICE_REGION, ":icons/lattice_region.svg", "Add lattice region to explore");
   create_tool_button(TOOL_ADD_ROI, ":icons/roi.svg", "Add region of interest");
+  create_tool_button(TOOL_COMPUTE_LATTICE, "", "Compute lattice in selected region from elected e point");
   create_tool_button(TOOL_EDIT_POLYGON, "", "Edit Polygon (E)");
   create_tool_button(TOOL_ADD_HUMAN_LANE, "", "Add Human Lane with width");
 
@@ -928,6 +929,8 @@ void Editor::mouse_event(const MouseType t, QMouseEvent* e)
     case TOOL_ADD_FLOOR:    mouse_add_floor(t, e, p); break;
     case TOOL_ADD_HOLE:     mouse_add_hole(t, e, p); break;
     case TOOL_ADD_LATTICE_REGION:     mouse_add_lattice_region(t, e, p); break;
+    // // the COMPUTE_LATTICE should not be related to a mouse event
+    // case TOOL_COMPUTE_LATTICE:     compute_lattice(t, e, p); break;
     case TOOL_EDIT_POLYGON: mouse_edit_polygon(t, e, p); break;
     case TOOL_ADD_FEATURE:  mouse_add_feature(t, e, p); break;
     case TOOL_ADD_CONSTRAINT: mouse_add_constraint(t, e, p); break;
@@ -1075,6 +1078,7 @@ const QString Editor::tool_id_to_string(const int id)
     case TOOL_EDIT_POLYGON: return "&edit polygon";
     case TOOL_ADD_HUMAN_LANE: return "add human lane";
     case TOOL_ADD_FEATURE: return "add &feature";
+    case TOOL_COMPUTE_LATTICE: return "compute lattice";
     default: return "unknown tool ID";
   }
 }
@@ -1120,9 +1124,19 @@ void Editor::tool_toggled(int id, bool checked)
         "Left-click drag an edge to introduce a new vertex. "
         "Right-click a polygon vertex to remove it from the polygon.");
       break;
+    case TOOL_COMPUTE_LATTICE:
+      statusBar()->showMessage(
+        "tool_compute_lattice toggled");
+      break;
     default:
       statusBar()->clearMessage();
       break;
+  }
+
+  if (tool_id == TOOL_COMPUTE_LATTICE) {
+    std::cout << "tool_compute_lattice toggled" << std::endl;
+    // here we'll compute the lattice and draw it
+    compute_lattice();
   }
 
   // execute dialogs as needed
@@ -2840,4 +2854,49 @@ void Editor::cache_size_update_timer_timeout()
 {
   printf("cache_size_update_timer_timeout()\n");
   map_view->update_cache_size_label(cache_size_label);
+}
+
+void Editor::compute_lattice()
+{
+  std::cout << "compute lattice with selected regions and root" << std::endl;
+
+  std::cout << "Selected objects are: " << std::endl;
+
+
+  for (auto& v : building.levels[level_idx].vertices)
+  {
+    if (v.selected) {
+      std::cout << "Vertex " << v.name << " selected" << std::endl;
+      std::cout << "Coords x:" << v.x << " y:" << v.y << std::endl; 
+    } 
+  }
+
+  for (auto& ed : building.levels[level_idx].edges)
+  {
+    if (ed.selected) {
+      std::cout << "Edge " << ed.end_idx << " selected" << std::endl;
+    }
+  }
+  Vertex v;
+  for (auto& poly : building.levels[level_idx].polygons)
+  {
+    if (poly.selected) {
+      std::cout << "A polygon selected" << std::endl;
+
+      std::cout << "It has "<< poly.vertices.size() << " vertices" << std::endl;
+      for ( auto & v_id : poly.vertices) {
+        v = building.levels[level_idx].vertices.at(v_id);
+        std::cout << "  Vertex " << v.name << " selected" << std::endl;
+        std::cout << "  Coords x:" << v.x << " y:" << v.y << std::endl; 
+      }
+    }
+  }
+
+  /*
+    Once we have the regions we are going to explore and the start point,
+    we can call a separate function to compute the exploration of the lattice and draw it
+
+  */
+
+ 
 }

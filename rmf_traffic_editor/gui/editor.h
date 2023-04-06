@@ -123,6 +123,7 @@ private:
     TOOL_ADD_FIDUCIAL,
     TOOL_ADD_ROI,
     TOOL_ADD_HOLE,
+    TOOL_COMPUTE_LATTICE,
     TOOL_ADD_LATTICE_REGION,
     TOOL_ADD_HUMAN_LANE,
   } tool_id = TOOL_SELECT;
@@ -352,8 +353,10 @@ private:
     const MouseType t,
     QMouseEvent* e,
     const QPointF& p);
-
+  
   QPointF previous_mouse_point;
+
+  void compute_lattice();
 
   // For undo related support
   AddEdgeCommand* latest_add_edge = nullptr;

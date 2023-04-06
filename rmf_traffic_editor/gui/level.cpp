@@ -1033,10 +1033,18 @@ void Level::draw_polygon(
   QPen pen(Qt::black);
   pen.setWidthF(0.05 / drawing_meters_per_pixel);
 
-  scene->addPolygon(
+  
+  QGraphicsPolygonItem * polygon_item = scene->addPolygon(
     QPolygonF(polygon_vertices),
     pen,
     polygon.selected ? selected_brush : brush);
+  
+  // with this we can select the polygon
+  
+  if (polygon.type == polygon.LATTICE_REGION) {
+    polygon_item->setZValue(20.0);
+  }
+  
 }
 
 void Level::draw_polygons(QGraphicsScene* scene) const
