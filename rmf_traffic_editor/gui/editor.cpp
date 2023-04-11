@@ -2859,9 +2859,29 @@ void Editor::cache_size_update_timer_timeout()
 void Editor::compute_lattice()
 {
   std::cout << "compute lattice with selected regions and root" << std::endl;
+  
+  std::cout << "Looking for nav2 layer" << std::endl;
+  std::cout << " Names are:" << std::endl;
+  Layer nav2_layer;
+  for (Layer& l : building.levels[level_idx].layers) {
+    std::cout << "|" << l.name << "|" << std::endl;
 
+    if (l.name == "nav2") {
+      std::cout << "found" << std::endl;
+      nav2_layer = l;
+    }
+  }
+
+  std::cout << "The transform of nav2 is: " << std::endl;
+  for (auto& p : nav2_layer.transform_strings) {
+    std::cout << p.first << ": " << p.second << std::endl; 
+  }
+  
+  std::cout << "------scale " << nav2_layer.transform.scale() << std::endl;
+  std::cout << "------trans x " << nav2_layer.transform.translation().x() << std::endl;
+  std::cout << "------trans y " << nav2_layer.transform.translation().y() << std::endl;
+  std::cout << "------rot " << nav2_layer.transform.yaw() << std::endl;
   std::cout << "Selected objects are: " << std::endl;
-
 
   for (auto& v : building.levels[level_idx].vertices)
   {
@@ -2878,6 +2898,7 @@ void Editor::compute_lattice()
     }
   }
   Vertex v;
+  QPointF layer2global, global2layer;
   for (auto& poly : building.levels[level_idx].polygons)
   {
     if (poly.selected) {
@@ -2887,11 +2908,21 @@ void Editor::compute_lattice()
       for ( auto & v_id : poly.vertices) {
         v = building.levels[level_idx].vertices.at(v_id);
         std::cout << "  Vertex " << v.name << " selected" << std::endl;
-        std::cout << "  Coords x:" << v.x << " y:" << v.y << std::endl; 
+        std::cout << "  Coords x:" << v.x << " y:" << v.y << std::endl;
+
+        layer2global = nav2_layer.transform_layer_to_global(QPointF(v.x, v.y));
+        // global2layer = nav2_layer.transform_global_to_layer(QPointF(v.x, v.y));
+
+        // layer2global is the one we need to use
+        // However, take into account that the coords are in CENTIMETERS
+        std::cout << " layer2global: Transformed Coords x:" << layer2global.x() << " y:" << layer2global.y() << std::endl;
+        // std::cout << " global2layer: Transformed Coords x:" << global2layer.x() << " y:" << global2layer.y() << std::endl;
+
       }
     }
   }
 
+  
   /*
     Once we have the regions we are going to explore and the start point,
     we can call a separate function to compute the exploration of the lattice and draw it
