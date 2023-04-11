@@ -63,6 +63,15 @@
 #include "ui_transform_dialog.h"
 
 
+#include "lattice.hpp"
+#include "lattice_helpers.hpp"
+
+#include <iomanip>
+#include <nlohmann/json.hpp>
+
+// for convenience
+using json = nlohmann::json;
+
 using std::string;
 using std::isnan;
 
@@ -2858,6 +2867,9 @@ void Editor::cache_size_update_timer_timeout()
 
 void Editor::compute_lattice()
 {
+
+  bool can_compute_lattice = false;
+  Vertex root;
   std::cout << "compute lattice with selected regions and root" << std::endl;
   
   std::cout << "Looking for nav2 layer" << std::endl;
@@ -2888,6 +2900,11 @@ void Editor::compute_lattice()
     if (v.selected) {
       std::cout << "Vertex " << v.name << " selected" << std::endl;
       std::cout << "Coords x:" << v.x << " y:" << v.y << std::endl; 
+    
+      if ( v.is_lattice_root()) {
+        can_compute_lattice = true;
+        root = v;
+      }
     } 
   }
 
@@ -2922,12 +2939,84 @@ void Editor::compute_lattice()
     }
   }
 
-  
+  // the walls we can collide with
+  for (auto& lane : building.levels[level_idx].edges) {
+    if (lane.type == lane.WALL) {
+      std::cout << "Wall found"  << std::endl;
+
+      for (int idx : {lane.start_idx, lane.end_idx}) {
+        v = building.levels[level_idx].vertices.at(idx);
+
+        std::cout << "  Vertex " << v.name << " from the wall" << std::endl;
+        std::cout << "  Coords x:" << v.x << " y:" << v.y << std::endl;
+
+        layer2global = nav2_layer.transform_layer_to_global(QPointF(v.x, v.y));
+        // global2layer = nav2_layer.transform_global_to_layer(QPointF(v.x, v.y));
+
+        // layer2global is the one we need to use
+        // However, take into account that the coords are in CENTIMETERS
+        std::cout << " layer2global: Transformed Coords x:" << layer2global.x() << " y:" << layer2global.y() << std::endl;
+
+      }
+
+    }
+  }
+
+
   /*
     Once we have the regions we are going to explore and the start point,
     we can call a separate function to compute the exploration of the lattice and draw it
-
   */
 
- 
+  if (can_compute_lattice) {
+    
+    // get the motion prims
+    //open json file
+    // TODO: get this thrugh params
+    std::string j_filename = "/home/ivan/omnit_ws/src/plugins/planners/lattice_planner/primitive_generation/control_set_1_4_m5_r1.json";
+    json j_file;
+    std::ifstream myfile(j_filename);
+    if ( myfile.is_open() ) {
+      j_file = json::parse(myfile);
+    } else {
+      std::cerr << "Could not open " << j_filename << std::endl;
+      return;
+    }
+
+    MotionPrimitives m_prims;
+
+    parseJson2MotPrims(j_file, m_prims);
+
+    std::vector<double> theta_samples = j_file["theta_samples"].get<std::vector<double>>();
+    // create the lattice object
+    QPointF root_nav = nav2_layer.transform_layer_to_global(QPointF(root.x, root.y));
+    lattice::State r{root_nav.x() / 10, root_nav.y() / 10, lattice::BaseLattice::discretizeAngle(root.theta(), theta_samples)};
+    lattice::RootLattice lat(r, m_prims);
+    lat.enableReverse();
+
+    // expand n times
+    lattice::EdgeList edges;
+
+    lat.toExpand(r);
+    lat.resumeExpansion(10, edges);
+
+    std::cout << "Expanded " << edges.size() << "edges!" << std::endl;
+    QPointF rmf_transf;
+
+    for (auto& e : edges) {
+      rmf_transf = nav2_layer.transform_global_to_layer(QPointF(e.start.x * 10, e.start.y * 10));
+      undo_stack.push(
+      new AddVertexCommand(
+        &building,
+        level_idx,
+        rmf_transf.x(),
+        rmf_transf.y()));
+    }
+    setWindowModified(true);
+    create_scene();
+
+  } else {
+    std::cout << "Cannot compute the lattice" << std::endl;
+  }
+
 }

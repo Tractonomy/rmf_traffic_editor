@@ -29,8 +29,14 @@ endif()
 include_directories(.)
 include_directories(gui)
 include_directories(include)
+include_directories(gui/lattice/include)
 
 set(gui_sources
+
+  # lattice planner related
+  gui/lattice/src/state.cpp 
+  gui/lattice/src/lattice.cpp 
+
   gui/actions/add_constraint.cpp
   gui/actions/add_edge.cpp
   gui/actions/add_feature.cpp
@@ -173,5 +179,6 @@ if (BUILD_TESTING)
 endif()
 
 ament_export_include_directories(include)
+# ament_export_include_directories(gui/lattice/include)
 
 ament_package()
