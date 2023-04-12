@@ -2981,21 +2981,19 @@ void Editor::compute_lattice()
     
     std::string j_filename = "/home/ivan/omnit_ws/src/plugins/planners/lattice_planner/primitive_generation/control_set_1_4_m5_r1.json";
 
-    RootLatticeHelper lat_helper(root, root_idx, j_filename, nav2_layer);
-
+    RootLatticeHelper* lat_helper_ptr = new RootLatticeHelper(root, root_idx, j_filename, nav2_layer);
+    building.levels[level_idx].helpers_ptr.push_back(lat_helper_ptr);
     // expand n times
     lattice::EdgeList edges;
-    lat_helper.resumeExpansion(10, edges);
+    lat_helper_ptr->resumeExpansion(10, edges);
 
     std::cout << "Expanded " << edges.size() << "edges!" << std::endl;
 
-    create_scene();
-
-    lat_helper.draw(scene);
+    // lat_helper_ptr->draw(scene);
     
     // heere
     setWindowModified(true);
-
+    create_scene();
   } else {
     std::cout << "Cannot compute the lattice" << std::endl;
   }

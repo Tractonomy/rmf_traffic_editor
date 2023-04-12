@@ -55,7 +55,7 @@ class RootLatticeHelper : public Helper
 
   bool resumeExpansion(int n, lattice::EdgeList& edges_expanded);
   bool computePath(lattice::State start, lattice::State goal);
-  void draw(QGraphicsScene * scene) override;
+  void draw(QGraphicsScene * scene, const Level * level_ptr) override;
   
  private:
   lattice::RootLattice* lat_;

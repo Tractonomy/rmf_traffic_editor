@@ -33,6 +33,7 @@
 #include "polygon.h"
 #include "rendering_options.h"
 #include "vertex.h"
+#include "helper.h"
 
 #include <QPixmap>
 #include <QPainterPath>
@@ -50,6 +51,7 @@ public:
   std::vector<Vertex> vertices;
   std::vector<Edge> edges;
   std::vector<Polygon> polygons;
+  std::vector<Helper*> helpers_ptr;
 
   std::vector<Layer> layers;
   bool are_layer_names_unique();

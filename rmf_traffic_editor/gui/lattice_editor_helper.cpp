@@ -38,7 +38,10 @@ RootLatticeHelper::RootLatticeHelper(Vertex root, int vertex_id, std::string fil
   lat_->toExpand(r);
 }
 
-void RootLatticeHelper::draw(QGraphicsScene * scene) {
+void RootLatticeHelper::draw(QGraphicsScene * scene, const Level * level_ptr) {
+
+  if (!level_ptr->vertices[root_v_idx_].selected)
+    return;
 
   // draw the lattice
   lattice::EdgeList edges;

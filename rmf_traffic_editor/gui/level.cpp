@@ -1222,6 +1222,11 @@ void Level::draw(
 
   for (std::size_t i = 0; i < constraints.size(); i++)
     draw_constraint(scene, constraints[i], i);
+
+  // draw helpers
+
+  for (std::size_t i = 0; i < helpers_ptr.size(); i++)
+    helpers_ptr.at(i)->draw(scene, this);
 }
 
 void Level::clear_scene()
