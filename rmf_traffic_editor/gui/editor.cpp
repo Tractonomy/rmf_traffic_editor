@@ -3003,7 +3003,20 @@ void Editor::compute_lattice()
     std::cout << "Expanded " << edges.size() << "edges!" << std::endl;
     QPointF rmf_transf;
 
+    create_scene();
+
+    double max_cost = 0.0, min_cost = INFINITY;
+    for (auto& e: edges) {
+      //v_marker_arr.markers.push_back(createMarkerFromEdge(e, m_prims_, {2.0f * x, 2.0f * (1 - x), 0}))
+      max_cost = std::max<double>(e.cost, max_cost);
+      min_cost = std::min<double>(e.cost, min_cost);
+    }
+    // x = (e.cost - min_cost) / (max_cost - min_cost);
+    // {2.0f * x, 2.0f * (1 - x), 0, 0.15}
+    double x;
     for (auto& e : edges) {
+
+      x = (e.cost - min_cost) / (max_cost - min_cost);
       rmf_transf = nav2_layer.transform_global_to_layer(QPointF(e.start.x * 10, e.start.y * 10));
       undo_stack.push(
       new AddVertexCommand(
@@ -3011,10 +3024,13 @@ void Editor::compute_lattice()
         level_idx,
         rmf_transf.x(),
         rmf_transf.y()));
-    }
-    setWindowModified(true);
-    create_scene();
 
+      drawLatticeEdge(scene, QBrush(QColor::fromRgbF((2.0f * x) / 2.0, (2.0f * (1 - x)) / 2.0, 0, 0.5)), e, m_prims, nav2_layer);
+    }
+    // heere
+    setWindowModified(true);
+
+    //scene->addLine()
   } else {
     std::cout << "Cannot compute the lattice" << std::endl;
   }

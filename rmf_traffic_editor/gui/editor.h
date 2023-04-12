@@ -43,6 +43,8 @@
 
 #include "crowd_sim/crowd_sim_editor_table.h"
 
+#include "lattice_draw_utils.h"
+
 class BuildingTable;
 class LayerTable;
 class LevelTable;

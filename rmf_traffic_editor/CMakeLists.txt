@@ -37,6 +37,8 @@ set(gui_sources
   gui/lattice/src/state.cpp 
   gui/lattice/src/lattice.cpp 
 
+
+  gui/lattice_draw_utils.cpp
   gui/actions/add_constraint.cpp
   gui/actions/add_edge.cpp
   gui/actions/add_feature.cpp
