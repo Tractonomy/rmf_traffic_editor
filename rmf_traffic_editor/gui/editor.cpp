@@ -2882,21 +2882,21 @@ void Editor::compute_lattice()
     std::cout << "|" << l.name << "|" << std::endl;
 
     if (l.name == "nav2") {
-      std::cout << "found" << std::endl;
+      std::cout << "found Nav2 layer" << std::endl;
       nav2_layer = l;
     }
   }
 
-  std::cout << "The transform of nav2 is: " << std::endl;
-  for (auto& p : nav2_layer.transform_strings) {
-    std::cout << p.first << ": " << p.second << std::endl; 
-  }
+  // std::cout << "The transform of nav2 is: " << std::endl;
+  // for (auto& p : nav2_layer.transform_strings) {
+  //   std::cout << p.first << ": " << p.second << std::endl; 
+  // }
   
-  std::cout << "------scale " << nav2_layer.transform.scale() << std::endl;
-  std::cout << "------trans x " << nav2_layer.transform.translation().x() << std::endl;
-  std::cout << "------trans y " << nav2_layer.transform.translation().y() << std::endl;
-  std::cout << "------rot " << nav2_layer.transform.yaw() << std::endl;
-  std::cout << "Selected objects are: " << std::endl;
+  // std::cout << "------scale " << nav2_layer.transform.scale() << std::endl;
+  // std::cout << "------trans x " << nav2_layer.transform.translation().x() << std::endl;
+  // std::cout << "------trans y " << nav2_layer.transform.translation().y() << std::endl;
+  // std::cout << "------rot " << nav2_layer.transform.yaw() << std::endl;
+  // std::cout << "Selected objects are: " << std::endl;
 
 
   Vertex v;
@@ -2910,13 +2910,13 @@ void Editor::compute_lattice()
       std::cout << "Coords x:" << v.x << " y:" << v.y << std::endl; 
     
       if ( v.is_lattice_root()) {
-        can_compute_lattice = true;
+        can_compute_lattice = nav2_layer.name == "nav2";
         root = v;
         root_idx = v_idx;
       }
     } 
   }
-
+  /*
   for (auto& ed : building.levels[level_idx].edges)
   {
     if (ed.selected) {
@@ -2970,7 +2970,7 @@ void Editor::compute_lattice()
 
     }
   }
-
+  */
 
   /*
     Once we have the regions we are going to explore and the start point,
