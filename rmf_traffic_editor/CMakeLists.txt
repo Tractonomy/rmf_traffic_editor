@@ -34,10 +34,12 @@ include_directories(gui/lattice/include)
 set(gui_sources
 
   # lattice planner related
-  gui/lattice/src/state.cpp 
-  gui/lattice/src/lattice.cpp 
+  gui/lattice/src/state.cpp
+  gui/lattice/src/lattice.cpp
+  gui/lattice/src/lattice_helpers.cpp 
 
 
+  gui/lattice_editor_helper.cpp
   gui/lattice_draw_utils.cpp
   gui/actions/add_constraint.cpp
   gui/actions/add_edge.cpp

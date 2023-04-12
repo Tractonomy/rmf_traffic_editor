@@ -66,6 +66,8 @@
 #include "lattice.hpp"
 #include "lattice_helpers.hpp"
 
+#include "lattice_editor_helper.h"
+
 #include <iomanip>
 #include <nlohmann/json.hpp>
 
@@ -2870,6 +2872,7 @@ void Editor::compute_lattice()
 
   bool can_compute_lattice = false;
   Vertex root;
+  int root_idx;
   std::cout << "compute lattice with selected regions and root" << std::endl;
   
   std::cout << "Looking for nav2 layer" << std::endl;
@@ -2895,8 +2898,13 @@ void Editor::compute_lattice()
   std::cout << "------rot " << nav2_layer.transform.yaw() << std::endl;
   std::cout << "Selected objects are: " << std::endl;
 
-  for (auto& v : building.levels[level_idx].vertices)
+
+  Vertex v;
+
+  for (uint v_idx = 0; v_idx < building.levels[level_idx].vertices.size(); v_idx++)
   {
+    
+    v = building.levels[level_idx].vertices.at(v_idx);
     if (v.selected) {
       std::cout << "Vertex " << v.name << " selected" << std::endl;
       std::cout << "Coords x:" << v.x << " y:" << v.y << std::endl; 
@@ -2904,6 +2912,7 @@ void Editor::compute_lattice()
       if ( v.is_lattice_root()) {
         can_compute_lattice = true;
         root = v;
+        root_idx = v_idx;
       }
     } 
   }
@@ -2914,7 +2923,7 @@ void Editor::compute_lattice()
       std::cout << "Edge " << ed.end_idx << " selected" << std::endl;
     }
   }
-  Vertex v;
+
   QPointF layer2global, global2layer;
   for (auto& poly : building.levels[level_idx].polygons)
   {
@@ -2970,67 +2979,23 @@ void Editor::compute_lattice()
 
   if (can_compute_lattice) {
     
-    // get the motion prims
-    //open json file
-    // TODO: get this thrugh params
     std::string j_filename = "/home/ivan/omnit_ws/src/plugins/planners/lattice_planner/primitive_generation/control_set_1_4_m5_r1.json";
-    json j_file;
-    std::ifstream myfile(j_filename);
-    if ( myfile.is_open() ) {
-      j_file = json::parse(myfile);
-    } else {
-      std::cerr << "Could not open " << j_filename << std::endl;
-      return;
-    }
 
-    MotionPrimitives m_prims;
-
-    parseJson2MotPrims(j_file, m_prims);
-
-    std::vector<double> theta_samples = j_file["theta_samples"].get<std::vector<double>>();
-    // create the lattice object
-    QPointF root_nav = nav2_layer.transform_layer_to_global(QPointF(root.x, root.y));
-    lattice::State r{root_nav.x() / 10, root_nav.y() / 10, lattice::BaseLattice::discretizeAngle(root.theta(), theta_samples)};
-    lattice::RootLattice lat(r, m_prims);
-    lat.enableReverse();
+    RootLatticeHelper lat_helper(root, root_idx, j_filename, nav2_layer);
 
     // expand n times
     lattice::EdgeList edges;
-
-    lat.toExpand(r);
-    lat.resumeExpansion(10, edges);
+    lat_helper.resumeExpansion(10, edges);
 
     std::cout << "Expanded " << edges.size() << "edges!" << std::endl;
-    QPointF rmf_transf;
 
     create_scene();
 
-    double max_cost = 0.0, min_cost = INFINITY;
-    for (auto& e: edges) {
-      //v_marker_arr.markers.push_back(createMarkerFromEdge(e, m_prims_, {2.0f * x, 2.0f * (1 - x), 0}))
-      max_cost = std::max<double>(e.cost, max_cost);
-      min_cost = std::min<double>(e.cost, min_cost);
-    }
-    // x = (e.cost - min_cost) / (max_cost - min_cost);
-    // {2.0f * x, 2.0f * (1 - x), 0, 0.15}
-    double x;
-    for (auto& e : edges) {
-
-      x = (e.cost - min_cost) / (max_cost - min_cost);
-      rmf_transf = nav2_layer.transform_global_to_layer(QPointF(e.start.x * 10, e.start.y * 10));
-      undo_stack.push(
-      new AddVertexCommand(
-        &building,
-        level_idx,
-        rmf_transf.x(),
-        rmf_transf.y()));
-
-      drawLatticeEdge(scene, QBrush(QColor::fromRgbF((2.0f * x) / 2.0, (2.0f * (1 - x)) / 2.0, 0, 0.5)), e, m_prims, nav2_layer);
-    }
+    lat_helper.draw(scene);
+    
     // heere
     setWindowModified(true);
 
-    //scene->addLine()
   } else {
     std::cout << "Cannot compute the lattice" << std::endl;
   }
