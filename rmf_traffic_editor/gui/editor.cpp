@@ -415,6 +415,7 @@ Editor::Editor()
   create_tool_button(TOOL_ADD_LATTICE_REGION, ":icons/lattice_region.svg", "Add lattice region to explore");
   create_tool_button(TOOL_ADD_ROI, ":icons/roi.svg", "Add region of interest");
   create_tool_button(TOOL_COMPUTE_LATTICE, "", "Compute lattice in selected region from elected e point");
+  create_tool_button(TOOL_SNAP_TO_LATTICE, "", "With a lattice root selected, snap the moving vertex to the lattice");
   create_tool_button(TOOL_EDIT_POLYGON, "", "Edit Polygon (E)");
   create_tool_button(TOOL_ADD_HUMAN_LANE, "", "Add Human Lane with width");
 
@@ -929,18 +930,19 @@ void Editor::mouse_event(const MouseType t, QMouseEvent* e)
   // dispatch to individual mouse handler functions to save indenting...
   switch (tool_id)
   {
-    case TOOL_SELECT:       mouse_select(t, e, p); break;
-    case TOOL_ADD_VERTEX:   mouse_add_vertex(t, e, p); break;
-    case TOOL_MOVE:         mouse_move(t, e, p); break;
-    case TOOL_ADD_LANE:     mouse_add_lane(t, e, p); break;
-    case TOOL_ADD_WALL:     mouse_add_wall(t, e, p); break;
-    case TOOL_ADD_MEAS:     mouse_add_meas(t, e, p); break;
-    case TOOL_ADD_DOOR:     mouse_add_door(t, e, p); break;
-    case TOOL_ADD_MODEL:    mouse_add_model(t, e, p); break;
-    case TOOL_ROTATE:       mouse_rotate(t, e, p); break;
-    case TOOL_ADD_FLOOR:    mouse_add_floor(t, e, p); break;
-    case TOOL_ADD_HOLE:     mouse_add_hole(t, e, p); break;
-    case TOOL_ADD_LATTICE_REGION:     mouse_add_lattice_region(t, e, p); break;
+    case TOOL_SELECT:               mouse_select(t, e, p); break;
+    case TOOL_ADD_VERTEX:           mouse_add_vertex(t, e, p); break;
+    case TOOL_MOVE:                 mouse_move(t, e, p); break;
+    case TOOL_ADD_LANE:             mouse_add_lane(t, e, p); break;
+    case TOOL_ADD_WALL:             mouse_add_wall(t, e, p); break;
+    case TOOL_ADD_MEAS:             mouse_add_meas(t, e, p); break;
+    case TOOL_ADD_DOOR:             mouse_add_door(t, e, p); break;
+    case TOOL_ADD_MODEL:            mouse_add_model(t, e, p); break;
+    case TOOL_ROTATE:               mouse_rotate(t, e, p); break;
+    case TOOL_ADD_FLOOR:            mouse_add_floor(t, e, p); break;
+    case TOOL_ADD_HOLE:             mouse_add_hole(t, e, p); break;
+    case TOOL_ADD_LATTICE_REGION:   mouse_add_lattice_region(t, e, p); break;
+    case TOOL_SNAP_TO_LATTICE:      mouse_snap_lattice(t, e, p); break;
     // // the COMPUTE_LATTICE should not be related to a mouse event
     // case TOOL_COMPUTE_LATTICE:     compute_lattice(t, e, p); break;
     case TOOL_EDIT_POLYGON: mouse_edit_polygon(t, e, p); break;
@@ -1091,6 +1093,7 @@ const QString Editor::tool_id_to_string(const int id)
     case TOOL_ADD_HUMAN_LANE: return "add human lane";
     case TOOL_ADD_FEATURE: return "add &feature";
     case TOOL_COMPUTE_LATTICE: return "compute lattice";
+    case TOOL_SNAP_TO_LATTICE: return "snap to lattice";
     default: return "unknown tool ID";
   }
 }
@@ -2555,6 +2558,198 @@ void Editor::mouse_add_lattice_region(
 {
   mouse_add_polygon(t, e, p, Polygon::LATTICE_REGION);
 }
+
+int Editor::getSelectedRootLattice() {
+  std::vector<Vertex> vertices = building.levels[level_idx].vertices;
+
+  for (size_t i = 0; i < vertices.size(); i++) {
+    // we need also to check if the lattice has been computed?
+    if (vertices[i].selected && vertices[i].is_lattice_root()) {
+      return i;
+    }
+  }
+  return -1;
+
+}
+
+void Editor::mouse_snap_lattice(
+  const MouseType t, QMouseEvent* e, const QPointF& p)
+{
+  //std::cout << "snapping" << std::endl;
+
+  
+
+  if (t == MOUSE_PRESS)
+  {
+    Level::NearestItem ni =
+      building.levels[level_idx].nearest_items(p.x(), p.y());
+
+    printf(
+      "mouse press (%.3f, %.3f) feature_dist = %.3f, feature_idx = %d, feature_layer_idx = %d\n",
+      p.x(),
+      p.y(),
+      ni.feature_dist,
+      ni.feature_idx,
+      ni.feature_layer_idx);
+
+    // todo: use QGraphics stuff to see if we clicked a model pixmap...
+    const double model_dist_thresh = 0.5 /
+      building.levels[level_idx].drawing_meters_per_pixel;
+
+    snap_root_vertex_idx = getSelectedRootLattice();
+
+    if (snap_root_vertex_idx == -1) {
+      std::cout << "No lattice root is selected" << std::endl;
+    }
+
+    // look for the lattice
+    //RootLatticeHelper * lattice_helper_ptr;
+    for (size_t i = 0; i < building.levels[level_idx].helpers_ptr.size(); i++) {
+      if (building.levels[level_idx].helpers_ptr[i]->id == Helper::LATTICE_HELPER) {
+        snap_lattice_idx = i;
+        std::cout << "Lattice of root found" << std::endl;
+      }
+    }
+
+    if (snap_lattice_idx == -1) {
+      std::cout << "No lattice found" << std::endl;
+    }
+
+    if (ni.vertex_idx >= 0 && ni.vertex_dist < 10.0)
+    {
+      mouse_vertex_idx = ni.vertex_idx;
+
+      if (std::isnan(building.levels[level_idx].vertices[mouse_vertex_idx].theta())) {
+        std::cout << "Vertex to snap must have a theta orientation" << std::endl;
+        mouse_vertex_idx = -1;
+        return;
+      } else {
+        std::cout << "orient to snap is " << building.levels[level_idx].vertices[mouse_vertex_idx].theta() << std::endl;
+      
+            // vertex to be added
+        Vertex& pt =
+            building.levels[level_idx].vertices[mouse_vertex_idx];
+        building.add_vertex(level_idx, pt.x, pt.y);
+        snap_vertex_idx = building.levels[level_idx].vertices.size() - 1;
+      }
+
+      latest_move_vertex = new MoveVertexCommand(
+        &building,
+        level_idx,
+        mouse_vertex_idx);
+    }
+
+   
+
+  }
+  else if (t == MOUSE_RELEASE)
+  {
+    if (mouse_vertex_idx >= 0) //Add mouse move vertex.
+    {
+      Vertex& pt =
+        building.levels[level_idx].vertices[mouse_vertex_idx];
+      Vertex& snap_pt =
+        building.levels[level_idx].vertices[snap_vertex_idx]; 
+      pt.x = snap_pt.x;
+      pt.y = snap_pt.y;
+      latest_move_vertex->set_final_destination(pt.x, pt.y);
+
+      // we suppose that snap_vertex is the last one
+      building.levels[level_idx].vertices.pop_back();
+
+      if (latest_move_vertex->has_moved)
+      {
+        undo_stack.push(latest_move_vertex);
+      }
+      else
+      {
+        delete latest_move_vertex;
+        latest_move_vertex = NULL;
+      }
+    }
+
+
+    mouse_vertex_idx = -1;
+    mouse_feature_idx = -1;
+    mouse_feature_layer_idx = -1;
+    mouse_fiducial_idx = -1;
+
+    snap_vertex_idx = -1;
+    snap_root_vertex_idx = -1;
+    snap_lattice_idx = -1;
+
+    create_scene();  // this will free mouse_motion_model
+    setWindowModified(true);
+  }
+  else if (t == MOUSE_MOVE)
+  {
+    if (!(e->buttons() & Qt::LeftButton))
+      return;// we only care about mouse-dragging, not just motion
+    /*
+    printf(
+      "mouse move, vertex_idx = %d, "
+      "feature_idx = %d, feature_layer_idx = %d, "
+      "fiducial_idx = %d\n",
+      mouse_vertex_idx,
+      mouse_feature_idx,
+      mouse_feature_layer_idx,
+      mouse_fiducial_idx);
+    */
+
+   // we only care about vertices
+    if (mouse_vertex_idx >= 0)
+    {
+      // we're dragging a vertex
+      Vertex& pt =
+        building.levels[level_idx].vertices[mouse_vertex_idx];
+      pt.x = p.x();
+      pt.y = p.y();
+      latest_move_vertex->set_final_destination(p.x(), p.y());
+      create_scene();
+    }
+
+    if (mouse_vertex_idx >= 0 && snap_vertex_idx >=0 && snap_lattice_idx >=0 && snap_root_vertex_idx >= 0) {
+      // compute the nearest possible position 
+
+      RootLatticeHelper * lat_helper = static_cast<RootLatticeHelper *>(building.levels[level_idx].helpers_ptr[snap_lattice_idx]);
+
+      
+      Vertex mouse_pt =
+          building.levels[level_idx].vertices[mouse_vertex_idx];
+
+      // we need to transform the coords
+
+      QPointF transf_mouse = lat_helper->layer_.transform_layer_to_global(QPointF(mouse_pt.x, mouse_pt.y));
+
+
+      lattice::State nearest;
+      lattice::State mouse_state{transf_mouse.x() / 10, transf_mouse.y() / 10,
+          lattice::RootLattice::discretizeAngle(mouse_pt.theta(), lat_helper->theta_samples)};
+      if (!lat_helper->lat_->getNearest(mouse_state, nearest)) {
+        std::cout << "could not find nearest to " << mouse_state << std::endl;
+        return;
+      } 
+      
+      std::cout << " found nearest at " << nearest << std::endl;
+    
+      // if found nearest, draw it
+
+      Vertex& snap_pt =
+        building.levels[level_idx].vertices[snap_vertex_idx];
+      
+      transf_mouse = lat_helper->layer_.transform_global_to_layer(QPointF(nearest.x * 10, nearest.y * 10));
+
+      snap_pt.x = transf_mouse.x();
+      snap_pt.y = transf_mouse.y();
+      create_scene();
+
+    }
+
+
+  }
+}
+
+
 
 
 void Editor::mouse_edit_polygon(

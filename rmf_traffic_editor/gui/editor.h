@@ -126,6 +126,7 @@ private:
     TOOL_ADD_ROI,
     TOOL_ADD_HOLE,
     TOOL_COMPUTE_LATTICE,
+    TOOL_SNAP_TO_LATTICE,
     TOOL_ADD_LATTICE_REGION,
     TOOL_ADD_HUMAN_LANE,
   } tool_id = TOOL_SELECT;
@@ -292,6 +293,10 @@ private:
   int mouse_feature_idx = -1;
   int mouse_feature_layer_idx = -1;
   int mouse_fiducial_idx = -1;
+
+  int snap_vertex_idx = -1;
+  int snap_root_vertex_idx = -1;
+  int snap_lattice_idx = -1;
   std::vector<int> mouse_motion_polygon_vertices;
   //int mouse_motion_polygon_vertex_idx = -1;
   Polygon::EdgeDragPolygon mouse_edge_drag_polygon;
@@ -345,6 +350,7 @@ private:
   void mouse_add_floor(const MouseType t, QMouseEvent* e, const QPointF& p);
   void mouse_add_hole(const MouseType t, QMouseEvent* e, const QPointF& p);
   void mouse_add_lattice_region(const MouseType t, QMouseEvent* e, const QPointF& p);
+  void mouse_snap_lattice(const MouseType t, QMouseEvent* e, const QPointF& p);
   void mouse_add_roi(const MouseType t, QMouseEvent* e, const QPointF& p);
   void mouse_edit_polygon(const MouseType t, QMouseEvent* e, const QPointF& p);
 
@@ -373,6 +379,9 @@ private:
   QLabel* cache_size_label = nullptr;
   QTimer* cache_size_update_timer = nullptr;
   void cache_size_update_timer_timeout();
+
+  // returns the first selected lattice root
+  int getSelectedRootLattice();
 };
 
 #endif

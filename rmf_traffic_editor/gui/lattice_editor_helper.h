@@ -57,12 +57,13 @@ class RootLatticeHelper : public Helper
   bool computePath(lattice::State start, lattice::State goal);
   void draw(QGraphicsScene * scene, const Level * level_ptr) override;
   
- private:
   lattice::RootLattice* lat_;
+  std::vector<double> theta_samples;
+  Layer layer_;
+ private:
   int root_v_idx_;
   std::string m_prims_path_;
   int max_expand_ = 0;
-  Layer layer_;
   MotionPrimitives m_prims_;
 
   double first_x;

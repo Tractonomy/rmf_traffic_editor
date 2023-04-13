@@ -29,7 +29,7 @@ RootLatticeHelper::RootLatticeHelper(Vertex root, int vertex_id, std::string fil
 
   parseJson2MotPrims(j_file, m_prims_);
 
-  std::vector<double> theta_samples = j_file["theta_samples"].get<std::vector<double>>();
+  theta_samples = j_file["theta_samples"].get<std::vector<double>>();
   // create the lattice object
   QPointF root_nav = layer_.transform_layer_to_global(QPointF(root.x, root.y));
   lattice::State r{root_nav.x() / 10, root_nav.y() / 10, lattice::BaseLattice::discretizeAngle(root.theta(), theta_samples)};

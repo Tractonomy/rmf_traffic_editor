@@ -12,7 +12,7 @@ class Level;
 class Helper {
 
 public:
-  Helper(int id) : id_(id) {};
+  Helper(int _id) : id(_id) {};
 
   enum HelperID {
     UNDEFINED = 0,
@@ -21,8 +21,7 @@ public:
   
   virtual void draw(QGraphicsScene * scene, const Level * level_ptr) = 0;
 
-protected:
-  int id_;
+  int id;
 
 };
 
