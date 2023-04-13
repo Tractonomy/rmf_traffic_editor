@@ -36,6 +36,9 @@ RootLatticeHelper::RootLatticeHelper(Vertex root, int vertex_id, std::string fil
   lat_ =  new lattice::RootLattice(r, m_prims_);
   lat_->enableReverse();
   lat_->toExpand(r);
+  
+  first_x = r.x;
+  first_y = r.y;
 }
 
 void RootLatticeHelper::draw(QGraphicsScene * scene, const Level * level_ptr) {
@@ -48,7 +51,7 @@ void RootLatticeHelper::draw(QGraphicsScene * scene, const Level * level_ptr) {
   lat_->getAllEdges(edges);
 
   // create_scene();
-  QPointF rmf_transf;
+  QPointF root_nav = layer_.transform_layer_to_global(QPointF(level_ptr->vertices[root_v_idx_].x,  level_ptr->vertices[root_v_idx_].y));;
 
   // show the lattice only when the root is selected??
 
@@ -62,9 +65,16 @@ void RootLatticeHelper::draw(QGraphicsScene * scene, const Level * level_ptr) {
   // {2.0f * x, 2.0f * (1 - x), 0, 0.15}
   double x;
   for (auto& e : edges) {
+    // offset in case the vertex is moved
+    
+    // std::cout << "First is " << first_x << ", " << first_y << std::endl;
+    // std::cout << "Root nav / 10 is " << root_nav.x() << ", " << root_nav.y() << std::endl;
+    e.start.x += (root_nav.x() / 10 - first_x);
+    e.start.y += (root_nav.y() / 10 - first_y);
+
 
     x = (e.cost - min_cost) / (max_cost - min_cost);
-    rmf_transf = layer_.transform_global_to_layer(QPointF(e.start.x * 10, e.start.y * 10));
+    //rmf_transf = layer_.transform_global_to_layer(QPointF(e.start.x * 10, e.start.y * 10));
     // undo_stack.push(
     // new AddVertexCommand(
     //   &building,
@@ -79,7 +89,7 @@ void RootLatticeHelper::draw(QGraphicsScene * scene, const Level * level_ptr) {
 }
 
 bool RootLatticeHelper::resumeExpansion(int n, lattice::EdgeList& edges) {
-
+  max_expand_ += n;
   return lat_->resumeExpansion(n, edges);
 }
   

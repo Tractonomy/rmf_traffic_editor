@@ -64,6 +64,9 @@ class RootLatticeHelper : public Helper
   int max_expand_ = 0;
   Layer layer_;
   MotionPrimitives m_prims_;
+
+  double first_x;
+  double first_y;
 };
 
 #endif
