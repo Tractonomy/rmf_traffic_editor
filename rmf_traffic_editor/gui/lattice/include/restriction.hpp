@@ -2,7 +2,6 @@
 #define RESTRICTION_HPP
 
 #include <vector>
-#include "lattice.hpp"
 
 
 namespace lattice

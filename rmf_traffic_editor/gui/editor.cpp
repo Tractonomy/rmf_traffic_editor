@@ -2918,6 +2918,7 @@ void Editor::compute_lattice()
     } 
   }
   std::vector<lattice::Point> lat_region;
+  
   for (auto& poly : building.levels[level_idx].polygons)
   {
     if (poly.selected && poly.type == poly.LATTICE_REGION) {
@@ -2944,12 +2945,12 @@ void Editor::compute_lattice()
     if (reg_check.check(lattice::Point{root.x, root.y})) {
       std::cout << "Root is inside" << std::endl;
     } else {
-      std::cout << "Root is not inside" << std::endl;
+      std::cout << "Root is not inside the lattice region selected" << std::endl;
+      can_compute_lattice = false;
     }
+  } else {
+    std::cout << "No region selected. Expanding freely" << std::endl;
   }
-
-  // debugging
-  return;
 
   // the walls we can collide with
   // for (auto& lane : building.levels[level_idx].edges) {
@@ -2979,16 +2980,36 @@ void Editor::compute_lattice()
     Once we have the regions we are going to explore and the start point,
     we can call a separate function to compute the exploration of the lattice and draw it
   */
+  QPointF transformed_p;
 
   if (can_compute_lattice) {
     
     std::string j_filename = "/home/ivan/omnit_ws/src/plugins/planners/lattice_planner/primitive_generation/control_set_1_4_m5_r1.json";
+    RootLatticeHelper* lat_helper_ptr;
+    if (lat_region.empty()) {
+      lat_helper_ptr = new RootLatticeHelper(root, root_idx, j_filename, nav2_layer);
+    } else {
+      // transform it into the nav2 coords
+      for (auto& p : lat_region) {
+        transformed_p = nav2_layer.transform_layer_to_global(QPointF(p.x, p.y));
 
-    RootLatticeHelper* lat_helper_ptr = new RootLatticeHelper(root, root_idx, j_filename, nav2_layer);
+        p.x = transformed_p.x() / 10;
+        p.y = transformed_p.y() / 10;
+      }
+
+      lattice::Restriction* restr_ptr = new lattice::SimpleRegionCheck(lat_region);
+      lat_helper_ptr = new RootLatticeHelper(root, root_idx, j_filename, nav2_layer, {restr_ptr});
+    }
+    
     building.levels[level_idx].helpers_ptr.push_back(lat_helper_ptr);
+    
     // expand n times
     lattice::EdgeList edges;
-    lat_helper_ptr->resumeExpansion(10, edges);
+    if (lat_region.empty()) {
+      lat_helper_ptr->resumeExpansion(10, edges);
+    } else {
+      lat_helper_ptr->resumeExpansion(0, edges);
+    }
 
     std::cout << "Expanded " << edges.size() << "edges!" << std::endl;
 

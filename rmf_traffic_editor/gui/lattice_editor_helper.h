@@ -47,7 +47,7 @@
 class RootLatticeHelper : public Helper
 {
  public:
-  RootLatticeHelper(Vertex root, int vertex_id, std::string filename_motion_prims, Layer layer);
+  RootLatticeHelper(Vertex root, int vertex_id, std::string filename_motion_prims, Layer layer, std::vector<lattice::Restriction*> restrictions = {});
   inline ~RootLatticeHelper(){ delete lat_;};
   
   // maybe we should make RootLattice* public

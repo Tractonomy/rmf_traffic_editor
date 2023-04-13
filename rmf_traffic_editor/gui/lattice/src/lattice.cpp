@@ -5,6 +5,7 @@ using lattice::EdgeList;
 using lattice::Adjacency;
 using lattice::BaseLattice;
 using lattice::RootLattice;
+using lattice::RestrictedRootLattice;
 using lattice::State;
 
 
@@ -55,7 +56,7 @@ BaseLattice::BaseLattice(MotionPrimitives& mot_prims) {
   visited = &fw_visited;
 }
 
-RootLattice::RootLattice(State& init, MotionPrimitives& mot_prims)
+RootLattice::RootLattice(State& init, MotionPrimitives mot_prims)
 : BaseLattice(mot_prims) {
   map_[init] = Adjacency{};
   //states_.push_back(init);
@@ -378,7 +379,7 @@ int BaseLattice::expandState(State& s, std::vector<State>& expanded, EdgeList& e
 
   }
 
-  return 0;
+  return edges_expanded.size();
 }
 
 int BaseLattice::expandState(State& s, std::vector<State>& expanded) {
@@ -562,3 +563,72 @@ std::ostream& lattice::operator<<(std::ostream& os,const BaseLattice& l) {
   }
   return os;
 }
+
+RestrictedRootLattice::RestrictedRootLattice(State& init, MotionPrimitives& mot_prims,  std::vector<Restriction*> restrictions)
+  : RootLattice(init, mot_prims), restrictions_(restrictions) {}
+
+RestrictedRootLattice::RestrictedRootLattice(RootLattice* base, std::vector<Restriction*> restrictions)
+  : RootLattice(*(base->root), {}), restrictions_(restrictions) {
+    if ( base->isReversed()){
+      rev_motion_prims_ = base->getMotionPrims();
+      base->disableReverse();
+      motion_prims_ = base->getMotionPrims();
+      base->enableReverse();
+    } else {
+      motion_prims_ = base->getMotionPrims();
+      base->enableReverse();
+      rev_motion_prims_ = base->getMotionPrims();
+      base->disableReverse();
+    }
+}
+
+int RestrictedRootLattice::expandState(State& s, ::std::vector<State>& expanded, EdgeList& edges_expanded) {
+  MotionPrimitives possible_prims;
+  
+  if (reverse_enabled_) {
+    possible_prims = rev_motion_prims_[s.th];
+  } else {
+    possible_prims = motion_prims_[s.th];
+  }
+
+  Edge e;
+  Point to_check;
+  bool valid = true;
+  //State expanded_s;
+  //std::vector<State> expanded;
+  for (MotionPrimitive& m : possible_prims) {
+    e = createEdge(s, m); 
+
+    
+    if (reverse_enabled_) {
+      to_check.x = e.start.x;
+      to_check.y = e.start.y;
+    } else {
+      to_check.x = e.end.x;
+      to_check.y = e.end.y;
+    }
+    
+    for (auto restrict_ptr : restrictions_) {
+      if (!restrict_ptr->check(to_check)) {
+        valid = false;
+      }
+    }
+
+    if (!valid)
+      continue;
+
+
+    addState(e.end, e);
+    if (reverse_enabled_) {
+      expanded.push_back(e.start);
+    } else {
+      expanded.push_back(e.end);
+    }
+    edges_expanded.push_back(e);
+
+  }
+
+  return edges_expanded.size();
+}
+
+  

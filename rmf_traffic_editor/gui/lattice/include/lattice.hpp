@@ -14,6 +14,7 @@
 
 #include "state.hpp"
 #include "motion_primitive.hpp"
+#include "restriction.hpp"
 
 #include <nlohmann/json.hpp>
 
@@ -133,7 +134,7 @@ class RootLattice : public BaseLattice
 {
  public:
   // define how the lattice states are created with MotionPimitives
-  RootLattice(State& init, MotionPrimitives& mot_prims);
+  RootLattice(State& init, MotionPrimitives mot_prims);
 
   // edge e should conect to_add to an existing State in the map 
   int addState(State& to_add, Edge& e) override;
@@ -144,6 +145,8 @@ class RootLattice : public BaseLattice
   template<class Archive>
   friend void ::boost::serialization::serialize(Archive & ar, RootLattice & s, const unsigned int version);
 
+
+  State* root = nullptr;
  protected:
   void updateChildrenCost(State& parent);
 
@@ -152,7 +155,19 @@ class RootLattice : public BaseLattice
 
   // we can iterate over the map, a vector of States is not necessary
   // ::std::vector<State> states_;
-  State* root = nullptr;
+};
+
+class RestrictedRootLattice : public RootLattice
+{
+public:
+  RestrictedRootLattice(State& init, MotionPrimitives& mot_prims,  std::vector<Restriction*> restrictions);
+  RestrictedRootLattice(RootLattice* base, std::vector<Restriction*> restrictions);
+
+  // check if all the restrictions are satisfied
+  int expandState(State& s, ::std::vector<State>& expanded, EdgeList& edges_expanded) override;
+
+protected:
+  std::vector<Restriction*> restrictions_;
 };
 
 } // namespace lattice

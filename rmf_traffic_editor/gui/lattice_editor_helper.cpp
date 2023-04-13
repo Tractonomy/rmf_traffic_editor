@@ -12,7 +12,7 @@ using json = nlohmann::json;
 using std::string;
 using std::isnan;
 
-RootLatticeHelper::RootLatticeHelper(Vertex root, int vertex_id, std::string filename_motion_prims, Layer layer)
+RootLatticeHelper::RootLatticeHelper(Vertex root, int vertex_id, std::string filename_motion_prims, Layer layer, std::vector<lattice::Restriction*> restrictions)
   : Helper(LATTICE_HELPER), root_v_idx_(vertex_id), m_prims_path_(filename_motion_prims), layer_(layer)
 {
   
@@ -33,7 +33,12 @@ RootLatticeHelper::RootLatticeHelper(Vertex root, int vertex_id, std::string fil
   // create the lattice object
   QPointF root_nav = layer_.transform_layer_to_global(QPointF(root.x, root.y));
   lattice::State r{root_nav.x() / 10, root_nav.y() / 10, lattice::BaseLattice::discretizeAngle(root.theta(), theta_samples)};
-  lat_ =  new lattice::RootLattice(r, m_prims_);
+  
+  if (restrictions.empty()){
+    lat_ = new lattice::RootLattice(r, m_prims_);
+  } else {
+    lat_ = new lattice::RestrictedRootLattice(r, m_prims_, restrictions);
+  }
   lat_->enableReverse();
   lat_->toExpand(r);
   
@@ -51,9 +56,7 @@ void RootLatticeHelper::draw(QGraphicsScene * scene, const Level * level_ptr) {
   lat_->getAllEdges(edges);
 
   // create_scene();
-  QPointF root_nav = layer_.transform_layer_to_global(QPointF(level_ptr->vertices[root_v_idx_].x,  level_ptr->vertices[root_v_idx_].y));;
-
-  // show the lattice only when the root is selected??
+  QPointF root_nav = layer_.transform_layer_to_global(QPointF(level_ptr->vertices[root_v_idx_].x,  level_ptr->vertices[root_v_idx_].y));
 
   double max_cost = 0.0, min_cost = INFINITY;
   for (auto& e: edges) {
