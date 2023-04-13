@@ -53,7 +53,11 @@ void RootLatticeHelper::draw(QGraphicsScene * scene, const Level * level_ptr) {
 
   // draw the lattice
   lattice::EdgeList edges;
-  lat_->getAllEdges(edges);
+  if (to_draw.th == -1) {
+    lat_->getAllEdges(edges);
+  } else {
+    lat_->getPath(to_draw, edges);
+  }
 
   // create_scene();
   QPointF root_nav = layer_.transform_layer_to_global(QPointF(level_ptr->vertices[root_v_idx_].x,  level_ptr->vertices[root_v_idx_].y));

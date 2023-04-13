@@ -2733,7 +2733,8 @@ void Editor::mouse_snap_lattice(
       std::cout << " found nearest at " << nearest << std::endl;
     
       // if found nearest, draw it
-
+      lat_helper->to_draw = nearest;
+      
       Vertex& snap_pt =
         building.levels[level_idx].vertices[snap_vertex_idx];
       

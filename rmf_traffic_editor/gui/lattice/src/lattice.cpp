@@ -169,9 +169,20 @@ int RootLattice::getPath(const State& goal, EdgeList& path) {
 
   // add edges as the backtracing cotinues
   Edge step_back;
+  State s1{0,0,0};
+  State s2{0,0,0};
   while (end != *root) {
-    if (!getEdge(backtrack_info_[end].best_parent, end, step_back)) {
-      std::cerr << "Could not get edge between " << end << " and " << backtrack_info_[end].best_parent << std::endl;
+
+    if (!reverse_enabled_) {
+      s1 = backtrack_info_[end].best_parent;
+      s2 = end;
+    } else {
+      s1 = end;
+      s2 = backtrack_info_[end].best_parent;
+    }
+
+    if (!getEdge(s1, s2, step_back)) {
+      std::cerr << "Could not get edge between " << s1 << " and " << s2 << std::endl;
       return false;
     }
     // std::cout << "found edge " << step_back << std::endl;
@@ -291,13 +302,22 @@ int RootLattice::addState(State& to_add, Edge& e) {
     map_[e.start].children.push_back(e); 
 
     // cost comparison
-    
-    if (backtrack_info_[e.end].cost_to_root > e.cost + backtrack_info_[e.start].cost_to_root){
-      // change cost and state of e.end
-      backtrack_info_[e.end].cost_to_root = e.cost + backtrack_info_[e.start].cost_to_root;
-      backtrack_info_[e.end].best_parent = e.start;
+    if (!reverse_enabled_) {
+      if (backtrack_info_[e.end].cost_to_root > e.cost + backtrack_info_[e.start].cost_to_root){
+        // change cost and state of e.end
+        backtrack_info_[e.end].cost_to_root = e.cost + backtrack_info_[e.start].cost_to_root;
+        backtrack_info_[e.end].best_parent = e.start;
 
-      updateChildrenCost(e.end);
+        updateChildrenCost(e.end);
+      }
+    } else {
+      if (backtrack_info_[e.start].cost_to_root > e.cost + backtrack_info_[e.end].cost_to_root){
+        // change cost and state of e.start
+        backtrack_info_[e.start].cost_to_root = e.cost + backtrack_info_[e.end].cost_to_root;
+        backtrack_info_[e.start].best_parent = e.end;
+
+        updateChildrenCost(e.start);
+      }
     }
   } else { // e.end == to_add, to_add is the added child
            // to_add was nt in the lattice
@@ -309,16 +329,19 @@ int RootLattice::addState(State& to_add, Edge& e) {
     map_[e.end].parents.push_back(e);
     map_[e.start].children.push_back(e); 
 
-    if (backtrack_info_.count(e.end) == 0) {
-      backtrack_info_[e.end].best_parent = e.start;
-      backtrack_info_[e.end].cost_to_root = e.cost + backtrack_info_[e.start].cost_to_root;
-    } else {
-      if (backtrack_info_[e.end].cost_to_root > e.cost + backtrack_info_[e.start].cost_to_root){
-        // change cost and state of e.end
-        backtrack_info_[e.end].cost_to_root = e.cost + backtrack_info_[e.start].cost_to_root;
-        backtrack_info_[e.end].best_parent = e.start;
+    State end = !reverse_enabled_ ?  e.end: e.start;
+    State start = !reverse_enabled_ ?  e.start : e.end;
 
-        updateChildrenCost(e.end);
+    if (backtrack_info_.count(end) == 0) {
+      backtrack_info_[end].best_parent = start;
+      backtrack_info_[end].cost_to_root = e.cost + backtrack_info_[start].cost_to_root;
+    } else {
+      if (backtrack_info_[end].cost_to_root > e.cost + backtrack_info_[start].cost_to_root){
+        // change cost and state of end
+        backtrack_info_[end].cost_to_root = e.cost + backtrack_info_[start].cost_to_root;
+        backtrack_info_[end].best_parent = start;
+
+        updateChildrenCost(end);
       }
     }
   }

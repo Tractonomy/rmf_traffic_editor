@@ -60,11 +60,14 @@ class RootLatticeHelper : public Helper
   lattice::RootLattice* lat_;
   std::vector<double> theta_samples;
   Layer layer_;
+
+  lattice::State to_draw{0,0,-1};
  private:
   int root_v_idx_;
   std::string m_prims_path_;
   int max_expand_ = 0;
   MotionPrimitives m_prims_;
+
 
   double first_x;
   double first_y;
