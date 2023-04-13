@@ -9,7 +9,7 @@ namespace lattice
 {
 
 struct Point{
-  int x,y;
+  double x,y;
 };
 
 struct Line {

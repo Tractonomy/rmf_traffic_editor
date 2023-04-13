@@ -64,6 +64,7 @@
 
 
 #include "lattice.hpp"
+#include "restriction.hpp"
 #include "lattice_helpers.hpp"
 
 #include "lattice_editor_helper.h"
@@ -2916,19 +2917,11 @@ void Editor::compute_lattice()
       }
     } 
   }
-  /*
-  for (auto& ed : building.levels[level_idx].edges)
-  {
-    if (ed.selected) {
-      std::cout << "Edge " << ed.end_idx << " selected" << std::endl;
-    }
-  }
-
-  QPointF layer2global, global2layer;
+  std::vector<lattice::Point> lat_region;
   for (auto& poly : building.levels[level_idx].polygons)
   {
-    if (poly.selected) {
-      std::cout << "A polygon selected" << std::endl;
+    if (poly.selected && poly.type == poly.LATTICE_REGION) {
+      std::cout << "A LATTICE REGION selected" << std::endl;
 
       std::cout << "It has "<< poly.vertices.size() << " vertices" << std::endl;
       for ( auto & v_id : poly.vertices) {
@@ -2936,41 +2929,51 @@ void Editor::compute_lattice()
         std::cout << "  Vertex " << v.name << " selected" << std::endl;
         std::cout << "  Coords x:" << v.x << " y:" << v.y << std::endl;
 
-        layer2global = nav2_layer.transform_layer_to_global(QPointF(v.x, v.y));
-        // global2layer = nav2_layer.transform_global_to_layer(QPointF(v.x, v.y));
-
-        // layer2global is the one we need to use
-        // However, take into account that the coords are in CENTIMETERS
-        std::cout << " layer2global: Transformed Coords x:" << layer2global.x() << " y:" << layer2global.y() << std::endl;
-        // std::cout << " global2layer: Transformed Coords x:" << global2layer.x() << " y:" << global2layer.y() << std::endl;
-
+        lat_region.push_back(lattice::Point{v.x, v.y});
       }
     }
   }
+
+  // check if the root lies inside the lattice region
+
+  if (!lat_region.empty()) {
+    std::cout << "Checking if root lies inside region..." << std::endl;
+
+    lattice::SimpleRegionCheck reg_check(lat_region);
+
+    if (reg_check.check(lattice::Point{root.x, root.y})) {
+      std::cout << "Root is inside" << std::endl;
+    } else {
+      std::cout << "Root is not inside" << std::endl;
+    }
+  }
+
+  // debugging
+  return;
 
   // the walls we can collide with
-  for (auto& lane : building.levels[level_idx].edges) {
-    if (lane.type == lane.WALL) {
-      std::cout << "Wall found"  << std::endl;
+  // for (auto& lane : building.levels[level_idx].edges) {
+  //   if (lane.type == lane.WALL) {
+  //     std::cout << "Wall found"  << std::endl;
 
-      for (int idx : {lane.start_idx, lane.end_idx}) {
-        v = building.levels[level_idx].vertices.at(idx);
+  //     for (int idx : {lane.start_idx, lane.end_idx}) {
+  //       v = building.levels[level_idx].vertices.at(idx);
 
-        std::cout << "  Vertex " << v.name << " from the wall" << std::endl;
-        std::cout << "  Coords x:" << v.x << " y:" << v.y << std::endl;
+  //       std::cout << "  Vertex " << v.name << " from the wall" << std::endl;
+  //       std::cout << "  Coords x:" << v.x << " y:" << v.y << std::endl;
 
-        layer2global = nav2_layer.transform_layer_to_global(QPointF(v.x, v.y));
-        // global2layer = nav2_layer.transform_global_to_layer(QPointF(v.x, v.y));
+  //       layer2global = nav2_layer.transform_layer_to_global(QPointF(v.x, v.y));
+  //       // global2layer = nav2_layer.transform_global_to_layer(QPointF(v.x, v.y));
 
-        // layer2global is the one we need to use
-        // However, take into account that the coords are in CENTIMETERS
-        std::cout << " layer2global: Transformed Coords x:" << layer2global.x() << " y:" << layer2global.y() << std::endl;
+  //       // layer2global is the one we need to use
+  //       // However, take into account that the coords are in CENTIMETERS
+  //       std::cout << " layer2global: Transformed Coords x:" << layer2global.x() << " y:" << layer2global.y() << std::endl;
 
-      }
+  //     }
 
-    }
-  }
-  */
+  //   }
+  // }
+  
 
   /*
     Once we have the regions we are going to explore and the start point,
