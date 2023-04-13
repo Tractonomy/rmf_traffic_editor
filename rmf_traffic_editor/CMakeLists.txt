@@ -36,6 +36,7 @@ set(gui_sources
   # lattice planner related
   gui/lattice/src/state.cpp
   gui/lattice/src/lattice.cpp
+  gui/lattice/src/restriction.cpp
   gui/lattice/src/lattice_helpers.cpp 
 
 
