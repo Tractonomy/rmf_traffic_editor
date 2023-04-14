@@ -2577,8 +2577,6 @@ void Editor::mouse_snap_lattice(
 {
   //std::cout << "snapping" << std::endl;
 
-  
-
   if (t == MOUSE_PRESS)
   {
     Level::NearestItem ni =
@@ -3069,7 +3067,7 @@ void Editor::compute_lattice()
 
   bool can_compute_lattice = false;
   Vertex root;
-  int root_idx;
+  int root_idx = -1;
   std::cout << "compute lattice with selected regions and root" << std::endl;
   
   std::cout << "Looking for nav2 layer" << std::endl;
@@ -3098,6 +3096,20 @@ void Editor::compute_lattice()
 
   Vertex v;
 
+  // create a vector of the vertice that have already a computed lattice
+  std::vector<int> computed_latt_vertices;
+
+  for (auto& helper_ptr : building.levels[level_idx].helpers_ptr) {
+
+    if (helper_ptr->id == helper_ptr->LATTICE_HELPER) {
+      RootLatticeHelper *  root_lat_ptr = static_cast<RootLatticeHelper *>(helper_ptr);
+
+      computed_latt_vertices.push_back(root_lat_ptr->root_v_idx);
+    }
+
+
+  }
+
   for (uint v_idx = 0; v_idx < building.levels[level_idx].vertices.size(); v_idx++)
   {
     
@@ -3107,12 +3119,24 @@ void Editor::compute_lattice()
       std::cout << "Coords x:" << v.x << " y:" << v.y << std::endl; 
     
       if ( v.is_lattice_root()) {
+        if (std::find(computed_latt_vertices.begin(), computed_latt_vertices.end(), v_idx) != computed_latt_vertices.end()) {
+          std::cout << "Selected root vertex already with a computed lattice" << std::endl;
+          continue;
+        }
+
         can_compute_lattice = nav2_layer.name == "nav2";
         root = v;
         root_idx = v_idx;
       }
     } 
   }
+
+  if (root_idx < 0) {
+    std::cout << "No valid root lattice to expand found" << std::endl;
+    return;
+  }
+
+
   std::vector<lattice::Point> lat_region;
   
   for (auto& poly : building.levels[level_idx].polygons)
