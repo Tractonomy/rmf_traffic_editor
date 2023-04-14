@@ -56,33 +56,30 @@ void RootLatticeHelper::draw(QGraphicsScene * scene, const Level * level_ptr) {
     return;
 
   // draw the lattice
-  lattice::EdgeList edges;
+  lattice::EdgeList full_edges, path;
   double max_cost = 0.0, min_cost = INFINITY;
   // we use the theta of the to_draw State to know if it has been set to other value
   // -1 is not possible in the discretization we have of the angle
-  if (to_draw.th == -1) {
-    lat_->getAllEdges(edges);
-    for (auto& e: edges) {
-      //v_marker_arr.markers.push_back(createMarkerFromEdge(e, m_prims_, {2.0f * x, 2.0f * (1 - x), 0}))
-      max_cost = std::max<double>(e.cost, max_cost);
-      min_cost = std::min<double>(e.cost, min_cost);
-    }
-
-  } else {
-    lat_->getPath(to_draw, edges);
+  lat_->getAllEdges(full_edges);
+  
+  for (auto& e: full_edges) {
+    //v_marker_arr.markers.push_back(createMarkerFromEdge(e, m_prims_, {2.0f * x, 2.0f * (1 - x), 0}))
+    max_cost = std::max<double>(e.cost, max_cost);
+    min_cost = std::min<double>(e.cost, min_cost);
   }
-
+  
+ 
   // create_scene();
   QPointF root_nav = layer_.transform_layer_to_global(QPointF(level_ptr->vertices[root_v_idx].x,  level_ptr->vertices[root_v_idx].y));
 
   
   // default color
-  QColor color = QColor::fromRgbF(0.0, 0.0, 0.0, 0.5);
+  QColor gray = QColor::fromRgbF(0.0, 0.0, 0.0, 0.9), color;
 
   // x = (e.cost - min_cost) / (max_cost - min_cost);
   // {2.0f * x, 2.0f * (1 - x), 0, 0.15}
   double x;
-  for (auto& e : edges) {
+  for (auto& e : full_edges) {
     // offset in case the vertex is moved
     
     // std::cout << "First is " << first_x << ", " << first_y << std::endl;
@@ -90,11 +87,29 @@ void RootLatticeHelper::draw(QGraphicsScene * scene, const Level * level_ptr) {
     e.start.x += (root_nav.x() / 10 - first_x);
     e.start.y += (root_nav.y() / 10 - first_y);
 
-    if (to_draw.th == -1) {
-      x = (e.cost - min_cost) / (max_cost - min_cost);
-      color = QColor::fromRgbF((2.0f * x) / 2.0, (2.0f * (1 - x)) / 2.0, 0, 0.5);
-    }
+    x = (e.cost - min_cost) / (max_cost - min_cost);
+    color = QColor::fromRgbF((2.0f * x) / 2.0, (2.0f * (1 - x)) / 2.0, 0, 0.5);
+    
     drawLatticeEdge(scene, QBrush(color), e, m_prims_, layer_);
+  }
+
+  
+  if (to_draw.th == -1) {
+    return;
+  }
+
+  lat_->getPath(to_draw, path);
+
+  for (auto& e : path) {
+    // offset in case the vertex is moved
+    
+    // std::cout << "First is " << first_x << ", " << first_y << std::endl;
+    // std::cout << "Root nav / 10 is " << root_nav.x() << ", " << root_nav.y() << std::endl;
+    e.start.x += (root_nav.x() / 10 - first_x);
+    e.start.y += (root_nav.y() / 10 - first_y);
+
+   
+    drawLatticeEdge(scene, QBrush(gray), e, m_prims_, layer_);
   }
 
   // setWindowModified(true);
