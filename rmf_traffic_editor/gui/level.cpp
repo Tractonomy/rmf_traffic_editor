@@ -28,6 +28,7 @@
 #include <QImageReader>
 
 #include "level.h"
+#include "lattice_editor_helper.h"
 #include "yaml_utils.h"
 
 using std::string;
@@ -459,6 +460,27 @@ bool Level::delete_selected()
       {
         if (polygon.vertices[i] > selected_vertex_idx)
           polygon.vertices[i]--;
+      }
+    }
+
+    // in the same way, check if any lattice helpers holds a lattice for this specififc vertex
+    for (auto it = begin(helpers_ptr); it != end(helpers_ptr); ++it) {
+      
+      if ((*it)->id == Helper::LATTICE_HELPER) {
+        
+        RootLatticeHelper * root_lat_help_ptr = static_cast<RootLatticeHelper *>(*it);
+
+        if (root_lat_help_ptr->root_v_idx == selected_vertex_idx) {
+          // then delete the pointer and reduce the helpers_ptr vector
+          delete root_lat_help_ptr;
+          helpers_ptr.erase(it);
+          
+          it--; // to keep iterating
+
+        } else if (root_lat_help_ptr->root_v_idx > selected_vertex_idx) {
+          // just reduce the vertex id if the vertex_id is greater than the one deleted
+          root_lat_help_ptr->root_v_idx--;
+        }
       }
     }
   }

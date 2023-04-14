@@ -13,7 +13,7 @@ class Helper {
 
 public:
   Helper(int _id) : id(_id) {};
-
+  virtual ~Helper() = default;
   enum HelperID {
     UNDEFINED = 0,
     LATTICE_HELPER

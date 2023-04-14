@@ -48,7 +48,7 @@ class RootLatticeHelper : public Helper
 {
  public:
   RootLatticeHelper(Vertex root, int vertex_id, std::string filename_motion_prims, Layer layer, std::vector<lattice::Restriction*> restrictions = {});
-  inline ~RootLatticeHelper(){ delete lat_;};
+  inline ~RootLatticeHelper() override { delete lat_;};
   
   // maybe we should make RootLattice* public
   // and access this methods drectly through the pointer
@@ -62,8 +62,8 @@ class RootLatticeHelper : public Helper
   Layer layer_;
 
   lattice::State to_draw{0,0,-1};
+  int root_v_idx;
  private:
-  int root_v_idx_;
   std::string m_prims_path_;
   int max_expand_ = 0;
   MotionPrimitives m_prims_;

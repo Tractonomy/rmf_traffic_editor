@@ -13,7 +13,7 @@ using std::string;
 using std::isnan;
 
 RootLatticeHelper::RootLatticeHelper(Vertex root, int vertex_id, std::string filename_motion_prims, Layer layer, std::vector<lattice::Restriction*> restrictions)
-  : Helper(LATTICE_HELPER), root_v_idx_(vertex_id), m_prims_path_(filename_motion_prims), layer_(layer)
+  : Helper(LATTICE_HELPER), root_v_idx(vertex_id), m_prims_path_(filename_motion_prims), layer_(layer)
 {
   
   json j_file;
@@ -48,7 +48,7 @@ RootLatticeHelper::RootLatticeHelper(Vertex root, int vertex_id, std::string fil
 
 void RootLatticeHelper::draw(QGraphicsScene * scene, const Level * level_ptr) {
 
-  if (!level_ptr->vertices[root_v_idx_].selected)
+  if (!level_ptr->vertices[root_v_idx].selected)
     return;
 
   // draw the lattice
@@ -69,7 +69,7 @@ void RootLatticeHelper::draw(QGraphicsScene * scene, const Level * level_ptr) {
   }
 
   // create_scene();
-  QPointF root_nav = layer_.transform_layer_to_global(QPointF(level_ptr->vertices[root_v_idx_].x,  level_ptr->vertices[root_v_idx_].y));
+  QPointF root_nav = layer_.transform_layer_to_global(QPointF(level_ptr->vertices[root_v_idx].x,  level_ptr->vertices[root_v_idx].y));
 
   
   // default color
