@@ -66,6 +66,7 @@ public:
   bool is_cleaning_zone() const;
   bool is_charger() const;
   bool is_lattice_root() const;
+  bool forward_expansion() const;
   double theta() const;
 
   std::string dropoff_ingestor() const;

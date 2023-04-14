@@ -41,6 +41,7 @@ const vector<pair<string, Param::Type>> Vertex::allowed_params
   { "human_goal_set_name", Param::Type::STRING },
   { "is_lattice_root", Param::Type::BOOL },
   { "theta", Param::Type::DOUBLE }, // parameter with the yaw angle of the point
+  { "forward_expansion", Param::Type::BOOL },
 };
 
 
@@ -417,6 +418,15 @@ std::string Vertex::lift_cabin() const
 bool Vertex::is_lattice_root() const
 {
   const auto it = params.find("is_lattice_root");
+  if (it == params.end())
+    return false;
+
+  return it->second.value_bool;
+}
+
+bool Vertex::forward_expansion() const
+{
+  const auto it = params.find("forward_expansion");
   if (it == params.end())
     return false;
 

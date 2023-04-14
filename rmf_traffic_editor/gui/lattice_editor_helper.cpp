@@ -39,7 +39,11 @@ RootLatticeHelper::RootLatticeHelper(Vertex root, int vertex_id, std::string fil
   } else {
     lat_ = new lattice::RestrictedRootLattice(r, m_prims_, restrictions);
   }
-  lat_->enableReverse();
+  if (!root.forward_expansion()) {
+    lat_->enableReverse();
+  } else {
+    lat_->disableReverse();
+  }
   lat_->toExpand(r);
   
   first_x = r.x;
