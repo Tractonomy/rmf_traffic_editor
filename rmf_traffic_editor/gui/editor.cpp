@@ -3096,20 +3096,21 @@ void Editor::compute_lattice()
 
   Vertex v;
 
-  // create a vector of the vertice that have already a computed lattice
-  std::vector<int> computed_latt_vertices;
+  // create a mao of the vertices and its corresponding idx in the helpers_ptr vector that have already a computed lattice
+  std::map<int, int> computed_latt_vertices; // map
 
-  for (auto& helper_ptr : building.levels[level_idx].helpers_ptr) {
+  Helper * helper_ptr;
+  for (size_t helpers_idx = 0;  helpers_idx < building.levels[level_idx].helpers_ptr.size(); helpers_idx++) {
+    helper_ptr = building.levels[level_idx].helpers_ptr[helpers_idx];
 
     if (helper_ptr->id == helper_ptr->LATTICE_HELPER) {
       RootLatticeHelper *  root_lat_ptr = static_cast<RootLatticeHelper *>(helper_ptr);
 
-      computed_latt_vertices.push_back(root_lat_ptr->root_v_idx);
+      computed_latt_vertices[root_lat_ptr->root_v_idx] = helpers_idx;
     }
-
-
   }
 
+  int lattice_already_computed_id = -1;
   for (uint v_idx = 0; v_idx < building.levels[level_idx].vertices.size(); v_idx++)
   {
     
@@ -3119,9 +3120,11 @@ void Editor::compute_lattice()
       std::cout << "Coords x:" << v.x << " y:" << v.y << std::endl; 
     
       if ( v.is_lattice_root()) {
-        if (std::find(computed_latt_vertices.begin(), computed_latt_vertices.end(), v_idx) != computed_latt_vertices.end()) {
-          std::cout << "Selected root vertex already with a computed lattice" << std::endl;
-          continue;
+        if (computed_latt_vertices.find(v_idx) != computed_latt_vertices.end()) {
+          std::cout << "Selected root vertex already with a computed lattice. Overwriting lattice if possible..." << std::endl;
+         
+          
+          lattice_already_computed_id = computed_latt_vertices[v_idx];
         }
 
         can_compute_lattice = nav2_layer.name == "nav2";
@@ -3171,29 +3174,6 @@ void Editor::compute_lattice()
   } else {
     std::cout << "No region selected. Expanding freely" << std::endl;
   }
-
-  // the walls we can collide with
-  // for (auto& lane : building.levels[level_idx].edges) {
-  //   if (lane.type == lane.WALL) {
-  //     std::cout << "Wall found"  << std::endl;
-
-  //     for (int idx : {lane.start_idx, lane.end_idx}) {
-  //       v = building.levels[level_idx].vertices.at(idx);
-
-  //       std::cout << "  Vertex " << v.name << " from the wall" << std::endl;
-  //       std::cout << "  Coords x:" << v.x << " y:" << v.y << std::endl;
-
-  //       layer2global = nav2_layer.transform_layer_to_global(QPointF(v.x, v.y));
-  //       // global2layer = nav2_layer.transform_global_to_layer(QPointF(v.x, v.y));
-
-  //       // layer2global is the one we need to use
-  //       // However, take into account that the coords are in CENTIMETERS
-  //       std::cout << " layer2global: Transformed Coords x:" << layer2global.x() << " y:" << layer2global.y() << std::endl;
-
-  //     }
-
-  //   }
-  // }
   
 
   /*
@@ -3221,7 +3201,21 @@ void Editor::compute_lattice()
       lat_helper_ptr = new RootLatticeHelper(root, root_idx, j_filename, nav2_layer, {restr_ptr});
     }
     
-    building.levels[level_idx].helpers_ptr.push_back(lat_helper_ptr);
+    // add the new lattice helper or updtaed the previous one
+
+    if (lattice_already_computed_id >= 0) {
+
+      // free the old pointer
+      delete building.levels[level_idx].helpers_ptr[lattice_already_computed_id];
+
+      // add the new one
+      building.levels[level_idx].helpers_ptr[lattice_already_computed_id] = lat_helper_ptr;
+
+    } else {
+
+      building.levels[level_idx].helpers_ptr.push_back(lat_helper_ptr);
+    }
+
     
     // expand n times
     lattice::EdgeList edges;
@@ -3235,9 +3229,6 @@ void Editor::compute_lattice()
 
     std::cout << "Expanded " << edges.size() << "edges!" << std::endl;
 
-    // lat_helper_ptr->draw(scene);
-    
-    // heere
     setWindowModified(true);
     create_scene();
   } else {
