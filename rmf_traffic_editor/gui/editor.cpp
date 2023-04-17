@@ -3204,7 +3204,7 @@ void Editor::compute_lattice()
 
   if (can_compute_lattice) {
     
-    std::string j_filename = "/home/ivan/omnit_ws/src/plugins/planners/lattice_planner/primitive_generation/control_set_1_4_m5_r1.json";
+    std::string j_filename = root.motion_prim_path() != "" ? root.motion_prim_path() :  "/home/ivan/omnit_ws/src/plugins/planners/lattice_planner/primitive_generation/control_set_1_4_m5_r1.json";
     RootLatticeHelper* lat_helper_ptr;
     if (lat_region.empty()) {
       lat_helper_ptr = new RootLatticeHelper(root, root_idx, j_filename, nav2_layer);

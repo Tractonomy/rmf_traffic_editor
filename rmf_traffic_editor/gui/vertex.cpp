@@ -42,6 +42,7 @@ const vector<pair<string, Param::Type>> Vertex::allowed_params
   { "is_lattice_root", Param::Type::BOOL },
   { "theta", Param::Type::DOUBLE }, // parameter with the yaw angle of the point
   { "forward_expansion", Param::Type::BOOL },
+  { "motion_prim_path", Param::Type::STRING },
 };
 
 
@@ -440,5 +441,14 @@ double Vertex::theta() const
     return NAN;
 
   return it->second.value_double;
+}
+
+std::string Vertex::motion_prim_path() const
+{
+  const auto it = params.find("motion_prim_path");
+  if (it == params.end())
+    return "";
+
+  return it->second.value_string;
 }
 
