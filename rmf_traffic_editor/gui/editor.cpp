@@ -2591,26 +2591,32 @@ void Editor::mouse_snap_lattice(
       ni.feature_layer_idx);
 
     // todo: use QGraphics stuff to see if we clicked a model pixmap...
-    const double model_dist_thresh = 0.5 /
-      building.levels[level_idx].drawing_meters_per_pixel;
+    // const double model_dist_thresh = 0.5 /
+    //   building.levels[level_idx].drawing_meters_per_pixel;
 
     snap_root_vertex_idx = getSelectedRootLattice();
 
     if (snap_root_vertex_idx == -1) {
       std::cout << "No lattice root is selected" << std::endl;
+      return;
     }
 
     // look for the lattice
     //RootLatticeHelper * lattice_helper_ptr;
     for (size_t i = 0; i < building.levels[level_idx].helpers_ptr.size(); i++) {
       if (building.levels[level_idx].helpers_ptr[i]->id == Helper::LATTICE_HELPER) {
-        snap_lattice_idx = i;
-        std::cout << "Lattice of root found" << std::endl;
+        
+        RootLatticeHelper * root_lat_help_ptr = static_cast<RootLatticeHelper *>(building.levels[level_idx].helpers_ptr[i]);
+        if (root_lat_help_ptr->root_v_idx == snap_root_vertex_idx) {
+          snap_lattice_idx = i;
+          std::cout << "Lattice of root found" << std::endl;
+        }
       }
     }
 
     if (snap_lattice_idx == -1) {
       std::cout << "No lattice found" << std::endl;
+      return;
     }
 
     if (ni.vertex_idx >= 0 && ni.vertex_dist < 10.0)
@@ -2717,12 +2723,15 @@ void Editor::mouse_snap_lattice(
 
       // we need to transform the coords
 
-      QPointF transf_mouse = lat_helper->layer_.transform_layer_to_global(QPointF(mouse_pt.x, mouse_pt.y));
-
+      QPointF transf = lat_helper->layer_.transform_layer_to_global(QPointF(mouse_pt.x, mouse_pt.y));
+      
+      double off_x, off_y;
+      lat_helper->getOffset(&(building.levels[level_idx]), off_x, off_y);
 
       lattice::State nearest;
-      lattice::State mouse_state{transf_mouse.x() / 10, transf_mouse.y() / 10,
+      lattice::State mouse_state{transf.x() / 10 - off_x, transf.y() / 10 - off_y,
           lattice::RootLattice::discretizeAngle(mouse_pt.theta(), lat_helper->theta_samples)};
+      
       if (!lat_helper->lat_->getNearest(mouse_state, nearest)) {
         std::cout << "could not find nearest to " << mouse_state << std::endl;
         return;
@@ -2736,10 +2745,10 @@ void Editor::mouse_snap_lattice(
       Vertex& snap_pt =
         building.levels[level_idx].vertices[snap_vertex_idx];
       
-      transf_mouse = lat_helper->layer_.transform_global_to_layer(QPointF(nearest.x * 10, nearest.y * 10));
+      transf = lat_helper->layer_.transform_global_to_layer(QPointF((nearest.x + off_x) * 10, (nearest.y + off_y) * 10));
 
-      snap_pt.x = transf_mouse.x();
-      snap_pt.y = transf_mouse.y();
+      snap_pt.x = transf.x();
+      snap_pt.y = transf.y();
       create_scene();
 
     }

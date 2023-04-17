@@ -57,6 +57,8 @@ class RootLatticeHelper : public Helper
   bool computePath(lattice::State start, lattice::State goal);
   void draw(QGraphicsScene * scene, const Level * level_ptr) override;
   
+  void getOffset(const Level* level_ptr, double& off_x, double& off_y);
+
   lattice::RootLattice* lat_;
   std::vector<double> theta_samples;
   Layer layer_;

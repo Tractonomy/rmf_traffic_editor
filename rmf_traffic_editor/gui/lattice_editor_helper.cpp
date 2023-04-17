@@ -50,6 +50,13 @@ RootLatticeHelper::RootLatticeHelper(Vertex root, int vertex_id, std::string fil
   first_y = r.y;
 }
 
+void RootLatticeHelper::getOffset(const Level * level_ptr, double& off_x, double& off_y) {
+  QPointF root_nav = layer_.transform_layer_to_global(QPointF(level_ptr->vertices[root_v_idx].x,  level_ptr->vertices[root_v_idx].y));
+
+  off_x = (root_nav.x() / 10 - first_x);
+  off_y = (root_nav.y() / 10 - first_y);
+}
+
 void RootLatticeHelper::draw(QGraphicsScene * scene, const Level * level_ptr) {
 
   if (!level_ptr->vertices[root_v_idx].selected)
@@ -70,8 +77,10 @@ void RootLatticeHelper::draw(QGraphicsScene * scene, const Level * level_ptr) {
   
  
   // create_scene();
-  QPointF root_nav = layer_.transform_layer_to_global(QPointF(level_ptr->vertices[root_v_idx].x,  level_ptr->vertices[root_v_idx].y));
-
+  //QPointF root_nav = layer_.transform_layer_to_global(QPointF(level_ptr->vertices[root_v_idx].x,  level_ptr->vertices[root_v_idx].y));
+ // get offset
+ double off_x, off_y;
+ getOffset(level_ptr, off_x, off_y);
   
   // default color
   QColor gray = QColor::fromRgbF(0.0, 0.0, 0.0, 0.9), color;
@@ -84,8 +93,8 @@ void RootLatticeHelper::draw(QGraphicsScene * scene, const Level * level_ptr) {
     
     // std::cout << "First is " << first_x << ", " << first_y << std::endl;
     // std::cout << "Root nav / 10 is " << root_nav.x() << ", " << root_nav.y() << std::endl;
-    e.start.x += (root_nav.x() / 10 - first_x);
-    e.start.y += (root_nav.y() / 10 - first_y);
+    e.start.x += off_x;
+    e.start.y += off_y;
 
     x = (e.cost - min_cost) / (max_cost - min_cost);
     color = QColor::fromRgbF((2.0f * x) / 2.0, (2.0f * (1 - x)) / 2.0, 0, 0.5);
@@ -105,9 +114,8 @@ void RootLatticeHelper::draw(QGraphicsScene * scene, const Level * level_ptr) {
     
     // std::cout << "First is " << first_x << ", " << first_y << std::endl;
     // std::cout << "Root nav / 10 is " << root_nav.x() << ", " << root_nav.y() << std::endl;
-    e.start.x += (root_nav.x() / 10 - first_x);
-    e.start.y += (root_nav.y() / 10 - first_y);
-
+    e.start.x += off_x;
+    e.start.y += off_y;
    
     drawLatticeEdge(scene, QBrush(gray), e, m_prims_, layer_);
   }
