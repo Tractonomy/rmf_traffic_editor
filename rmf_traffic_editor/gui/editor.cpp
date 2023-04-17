@@ -3226,7 +3226,9 @@ void Editor::compute_lattice()
     // expand n times
     lattice::EdgeList edges;
     if (lat_region.empty()) {
-      lat_helper_ptr->resumeExpansion(10, edges);
+      int n_exp = root.n_expansions() != 0 ? root.n_expansions() : 10;
+
+      lat_helper_ptr->resumeExpansion(n_exp, edges);
     } else {
       lat_helper_ptr->resumeExpansion(0, edges);
     }
