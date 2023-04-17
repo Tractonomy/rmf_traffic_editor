@@ -228,23 +228,41 @@ void RootLattice::updateChildrenCost(State& parent) {
   std::stack<State> parents;
   parents.push(parent);
 
-  State current_parent, child;
+  State current_parent, child, start;
   while (!parents.empty()) {
     current_parent = parents.top();
     parents.pop();
 
-    for (Edge& e : map_[current_parent].children) {
-      child = e.end;
+    // if we are in reverse mode we have to change the loop
+    if (!reverse_enabled_) {
+      for (Edge& e : map_[current_parent].children) {
+        child = e.end;
 
-      if (backtrack_info_[child].cost_to_root >
-        backtrack_info_[current_parent].cost_to_root + e.cost)
-      {
-        // update new cost
-        backtrack_info_[child].cost_to_root = backtrack_info_[current_parent].cost_to_root + e.cost;
-        backtrack_info_[child].best_parent = current_parent;
+        if (backtrack_info_[child].cost_to_root >
+          backtrack_info_[current_parent].cost_to_root + e.cost)
+        {
+          // update new cost
+          backtrack_info_[child].cost_to_root = backtrack_info_[current_parent].cost_to_root + e.cost;
+          backtrack_info_[child].best_parent = current_parent;
 
-        // add to the parents stack to update
-        parents.push(child);
+          // add to the parents stack to update
+          parents.push(child);
+        }
+      }
+    } else {
+      for (Edge& e : map_[current_parent].parents) {
+        start = e.start;
+
+        if (backtrack_info_[start].cost_to_root >
+          backtrack_info_[current_parent].cost_to_root + e.cost)
+        {
+          // update new cost
+          backtrack_info_[start].cost_to_root = backtrack_info_[current_parent].cost_to_root + e.cost;
+          backtrack_info_[start].best_parent = current_parent;
+
+          // add to the parents stack to update
+          parents.push(start);
+        }
       }
     }
   }
